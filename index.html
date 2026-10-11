@@ -23,12 +23,13 @@
     <svg width="26" height="26" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="13" fill="#FFB454"/><ellipse cx="32" cy="32" rx="28" ry="8" fill="none" stroke="#EAF0FF" stroke-width="3" transform="rotate(-22 32 32)"/></svg>
     <span>Exoplanet Atlas</span>
   </a>
-  <label class="search">
-    <span class="sr">Search planets or stars</span>
+  <nav class="nav" aria-label="Sections">
+    <a href="#explorer">Catalogue</a><a href="#how">How planets are found</a><a href="#timeline">Timeline</a><a href="#scopes">Telescopes</a><a href="#faq">Q&amp;A</a>
+  </nav>
+  <button type="button" class="searchbtn" id="goSearch" aria-label="Search planets">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-    <input id="q" type="search" placeholder="Search a planet or star" autocomplete="off" spellcheck="false">
-    <kbd aria-hidden="true">/</kbd>
-  </label>
+    <span>Search</span><kbd aria-hidden="true">/</kbd>
+  </button>
 </header>
 
 <main>
@@ -56,6 +57,12 @@
           <h2 class="h2">All planets <span class="count" id="matchCount"></span></h2>
           <button type="button" id="reset" class="link" hidden>Clear filters</button>
         </div>
+        <label class="search big">
+          <span class="sr">Search planets or stars</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input id="q" type="search" placeholder="Search a planet or star, e.g. Kepler-22" autocomplete="off" spellcheck="false">
+          <kbd aria-hidden="true">/</kbd>
+        </label>
         <div class="chips" id="typeChips" role="group" aria-label="Filter by planet type"></div>
         <div class="fields">
           <label class="field">Sort by<select id="sort"></select></label>
@@ -65,11 +72,45 @@
           <button type="button" class="chip" id="hz" aria-pressed="false" title="Starlight in a range that could allow liquid water on a rocky planet">Habitable-zone starlight</button>
         </div>
       </div>
-      <div class="thead" id="thead" aria-hidden="true">
-        <span></span><span>Planet</span><span>Type</span><span class="r">Found</span><span class="r">Distance</span><span class="r">Size, × Earth</span><span class="r">Temperature</span>
+      <div class="panel">
+        <div class="thead" id="thead" aria-hidden="true">
+          <span></span><span>Planet</span><span>Type</span><span class="r">Found</span><span class="r">Distance</span><span class="r">Size, × Earth</span><span class="r">Temperature</span>
+        </div>
+        <div class="viewport" id="viewport" tabindex="0" aria-label="Planet list, scrollable">
+          <div id="list" class="list"></div>
+          <p id="empty" class="empty" hidden>No planets match these filters. Clear a filter or change your search.</p>
+        </div>
+        <p class="panel-foot" aria-hidden="true">Scroll inside the list to see more</p>
       </div>
-      <div id="list" class="list"></div>
-      <p id="empty" class="empty" hidden>No planets match these filters. Clear a filter or change your search.</p>
+    </section>
+  </div>
+
+  <div id="learn">
+    <section id="how" class="wrap sec" aria-labelledby="howH">
+      <h2 class="h2 big-h" id="howH">How planets are found</h2>
+      <p class="sec-lede">A planet around another star is almost always too faint to see directly. Astronomers look for what it does to its star instead. Six methods have found nearly every planet in this catalogue.</p>
+      <div class="methods" id="methods"></div>
+    </section>
+    <section id="timeline" class="wrap sec" aria-labelledby="tlH">
+      <h2 class="h2 big-h" id="tlH">Discoveries through time</h2>
+      <p class="sec-lede" id="tlLede"></p>
+      <figure class="chartbox"><div id="tlChart"></div><div class="legend" id="tlLegend"></div></figure>
+    </section>
+    <section id="scopes" class="wrap sec" aria-labelledby="scH">
+      <h2 class="h2 big-h" id="scH">The telescopes behind the discoveries</h2>
+      <p class="sec-lede" id="scLede"></p>
+      <div class="split" id="scSplit"></div>
+      <ol class="scopes" id="scopes-list"></ol>
+      <p class="small muted" id="scNote"></p>
+    </section>
+    <section id="types" class="wrap sec" aria-labelledby="tyH">
+      <h2 class="h2 big-h" id="tyH">The kinds of planets out there</h2>
+      <p class="sec-lede">Size is the first thing astronomers sort planets by. Click a kind to browse it in the catalogue.</p>
+      <div class="zoo" id="zoo"></div>
+    </section>
+    <section id="faq" class="wrap sec" aria-labelledby="faqH">
+      <h2 class="h2 big-h" id="faqH">Questions people ask</h2>
+      <div class="faq" id="faqList"></div>
     </section>
   </div>
 </main>

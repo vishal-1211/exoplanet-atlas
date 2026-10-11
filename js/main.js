@@ -3,6 +3,7 @@ import { topFacts, details, HOW_FOUND, editorNote, fmtDuration, CURATED } from '
 import { comparisonHTML } from './compare.js';
 import { Sky, prepare, drawMiniSky } from './sky.js';
 import { heroCurve, transitCurve } from './charts.js';
+import { buildLearn } from './learn.js';
 
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -30,6 +31,7 @@ async function load() {
   startSky();
   buildHero();
   buildShelves();
+  buildLearn(ALL, { openPlanet, browseType });
   buildControls();
   applyFilters();
   window.addEventListener('popstate', routeFromHash);
@@ -84,9 +86,21 @@ $('#surprise').addEventListener('click', () => {
   openPlanet(pool[Math.floor(Math.random() * pool.length)]);
 });
 window.addEventListener('scroll', () => $('#bar').classList.toggle('scrolled', window.scrollY > 8), { passive: true });
+function focusSearch() {
+  const box = $('.search.big');
+  const near = box.getBoundingClientRect().top > 0 && box.getBoundingClientRect().top < window.innerHeight - 120;
+  if (!near) $('#explorer').scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+  $('#q').focus({ preventScroll: true });
+}
+$('#goSearch').addEventListener('click', focusSearch);
+function browseType(id) {
+  Object.assign(state, { q: '', types: new Set([id]), temp: '', method: '', decade: '', hz: false, sort: 'interesting' });
+  syncControls(); applyFilters();
+  $('#explorer').scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+}
 document.addEventListener('keydown', (e) => {
   if (e.key === '/' && !['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement.tagName) && $('#detail').hidden) {
-    e.preventDefault(); $('#q').focus();
+    e.preventDefault(); focusSearch();
   }
 });
 
@@ -257,12 +271,14 @@ function applyFilters() {
 
 // ---------------------------------------------------------------- virtual list
 const listEl = $('#list');
+const viewport = $('#viewport');
 let rowH = 60, curStart = -1, curEnd = -1, ticking = false;
 
-function layoutList() {
+function layoutList(reset = true) {
   rowH = window.matchMedia('(max-width: 760px)').matches ? 72 : 60;
   listEl.style.height = VIEW.length * rowH + 'px';
   curStart = curEnd = -1;
+  if (reset) viewport.scrollTop = 0;
   renderRows();
 }
 
@@ -285,10 +301,9 @@ function rowHTML(p, i) {
 function renderRows() {
   ticking = false;
   if (!VIEW.length) { listEl.innerHTML = ''; return; }
-  const topPx = listEl.getBoundingClientRect().top;
-  const pad = 8;
-  const start = Math.max(0, Math.floor((-topPx) / rowH) - pad);
-  const end = Math.min(VIEW.length, Math.ceil((window.innerHeight - topPx) / rowH) + pad);
+  const pad = 6;
+  const start = Math.max(0, Math.floor(viewport.scrollTop / rowH) - pad);
+  const end = Math.min(VIEW.length, Math.ceil((viewport.scrollTop + viewport.clientHeight) / rowH) + pad);
   if (start === curStart && end === curEnd) return;
   curStart = start; curEnd = end;
   let html = '';
@@ -296,8 +311,8 @@ function renderRows() {
   listEl.innerHTML = html;
 }
 const requestRender = () => { if (!ticking) { ticking = true; requestAnimationFrame(renderRows); } };
-window.addEventListener('scroll', requestRender, { passive: true });
-window.addEventListener('resize', () => { layoutList(); });
+viewport.addEventListener('scroll', requestRender, { passive: true });
+window.addEventListener('resize', () => { layoutList(false); });
 listEl.addEventListener('click', (e) => {
   const b = e.target.closest('.row');
   if (b) openPlanet(ALL[+b.dataset.id]);
