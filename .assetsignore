@@ -1,0 +1,12 @@
+node_modules
+.git
+.github
+scripts
+data/raw
+package.json
+package-lock.json
+README.md
+wrangler.jsonc
+.assetsignore
+.gitignore
+.nojekyll
