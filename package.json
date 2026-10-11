@@ -1,0 +1,13 @@
+{
+  "name": "exoplanet-atlas",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Browse every confirmed exoplanet and open an artist's-impression 3D view of each.",
+  "scripts": {
+    "fetch": "node scripts/fetch-nasa.mjs",
+    "build-data": "node scripts/build-data.mjs",
+    "test": "node scripts/test.mjs",
+    "serve": "python3 -m http.server 8080"
+  }
+}

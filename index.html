@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Exoplanet Atlas</title>
+<meta name="description" content="Every confirmed planet around another star. Search, sort, and open a spinning artist's impression of each one, with its discovery story and facts.">
+<meta name="theme-color" content="#070B1A">
+<meta name="color-scheme" content="dark">
+<meta property="og:title" content="Exoplanet Atlas">
+<meta property="og:description" content="Every confirmed planet around another star, in one place. Open any one to watch it turn.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23070B1A'/%3E%3Ccircle cx='32' cy='32' r='14' fill='%23FFB454'/%3E%3Cellipse cx='32' cy='32' rx='26' ry='7' fill='none' stroke='%23EAF0FF' stroke-width='2.5' transform='rotate(-22 32 32)'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<a class="skip" href="#explorer">Skip to the planet list</a>
+<canvas id="sky" aria-hidden="true"></canvas>
+<div class="veil" aria-hidden="true"></div>
+
+<header class="bar" id="bar">
+  <a class="brand" href="./" aria-label="Exoplanet Atlas home">
+    <svg width="26" height="26" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="13" fill="#FFB454"/><ellipse cx="32" cy="32" rx="28" ry="8" fill="none" stroke="#EAF0FF" stroke-width="3" transform="rotate(-22 32 32)"/></svg>
+    <span>Exoplanet Atlas</span>
+  </a>
+  <label class="search">
+    <span class="sr">Search planets or stars</span>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <input id="q" type="search" placeholder="Search a planet or star" autocomplete="off" spellcheck="false">
+    <kbd aria-hidden="true">/</kbd>
+  </label>
+</header>
+
+<main>
+  <section class="hero wrap">
+    <h1><span id="heroCount">6,445</span> worlds around other stars</h1>
+    <p class="lede" id="lede">Pick any planet to watch it turn. Every picture is an artist's impression built from what astronomers have measured.</p>
+    <div class="cta">
+      <button type="button" class="btn primary" id="explore">Explore the catalogue</button>
+      <button type="button" class="btn" id="surprise">Surprise me</button>
+    </div>
+    <figure class="curve">
+      <div id="heroCurve"></div>
+      <figcaption id="curveCap"></figcaption>
+    </figure>
+  </section>
+
+  <section id="shelves" class="wrap" aria-label="Interesting planets">
+    <div class="loading" id="loading">Loading the catalogue…</div>
+  </section>
+
+  <div class="scrim">
+    <section id="explorer" class="wrap" aria-label="All planets">
+      <div class="tools">
+        <div class="tools-head">
+          <h2 class="h2">All planets <span class="count" id="matchCount"></span></h2>
+          <button type="button" id="reset" class="link" hidden>Clear filters</button>
+        </div>
+        <div class="chips" id="typeChips" role="group" aria-label="Filter by planet type"></div>
+        <div class="fields">
+          <label class="field">Sort by<select id="sort"></select></label>
+          <label class="field">Temperature<select id="temp"></select></label>
+          <label class="field">Found by<select id="method"></select></label>
+          <label class="field">Discovered<select id="decade"></select></label>
+          <button type="button" class="chip" id="hz" aria-pressed="false" title="Starlight in a range that could allow liquid water on a rocky planet">Habitable-zone starlight</button>
+        </div>
+      </div>
+      <div class="thead" id="thead" aria-hidden="true">
+        <span></span><span>Planet</span><span>Type</span><span class="r">Found</span><span class="r">Distance</span><span class="r">Size, × Earth</span><span class="r">Temperature</span>
+      </div>
+      <div id="list" class="list"></div>
+      <p id="empty" class="empty" hidden>No planets match these filters. Clear a filter or change your search.</p>
+    </section>
+  </div>
+</main>
+
+<footer class="foot wrap">
+  <details>
+    <summary>About this data and the pictures</summary>
+    <ul>
+      <li><strong>The pictures are artist's impressions.</strong> Almost no planet here has been photographed. Each image is generated from the planet's size, temperature and star, and coloured to match. Real colours, clouds and continents are unknown.</li>
+      <li><strong>Temperatures</strong> are equilibrium temperatures: what the planet would be if it only absorbed and re-radiated starlight. Real temperatures depend on atmospheres. When NASA gives none, we estimate one from the star and orbit and say so.</li>
+      <li><strong>Masses</strong> found by the radial-velocity method can be minimum values. Only planets with a measured size and mass get a density.</li>
+      <li><strong>Habitable-zone starlight</strong> means the starlight is in a range that could allow liquid water on a rocky planet. It says nothing about whether water or life exists.</li>
+      <li><strong>The background</strong> is a map of the whole sky. Each dot is a real star that has at least one known planet, placed at its real position.</li>
+      <li><strong>Facts</strong> are generated from the numbers, plus short hand-written notes for famous planets. <em>Not identified</em> means astronomers have not measured it yet.</li>
+    </ul>
+  </details>
+  <p class="credit">This research has made use of the NASA Exoplanet Archive, which is operated by the California Institute of Technology, under contract with the National Aeronautics and Space Administration under the Exoplanet Exploration Program. Data last refreshed <span id="updated">…</span>. This is an independent project and is not affiliated with NASA.</p>
+</footer>
+
+<div id="detail" class="detail" role="dialog" aria-modal="true" aria-labelledby="dName" hidden>
+  <div class="stage">
+    <canvas id="gl" aria-label="Rotating artist's impression of the selected planet"></canvas>
+    <div class="fallback" id="glFallback" hidden></div>
+    <button type="button" class="back" id="close">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+      All planets
+    </button>
+    <p class="stage-note"><span id="dArtist"></span> Drag to spin, scroll or pinch to zoom.</p>
+  </div>
+  <div class="sheet" id="sheet">
+    <h2 id="dName"></h2>
+    <p class="sub" id="dSub"></p>
+    <p class="tags" id="dBadges"></p>
+    <dl class="readout" id="dReadout"></dl>
+    <blockquote class="note" id="dNote" hidden></blockquote>
+    <section><h3>Facts</h3><ul class="facts" id="dFacts"></ul></section>
+    <section>
+      <h3>How it was found</h3>
+      <p id="dHow"></p>
+      <figure class="lc" id="dCurveWrap" hidden>
+        <div id="dCurve"></div>
+        <figcaption>The dip is this planet's real size relative to its star. The vertical scale is zoomed so it is visible.</figcaption>
+      </figure>
+    </section>
+    <section>
+      <h3>Where it is in our sky</h3>
+      <canvas id="dSky" class="skymap" aria-label="Map of the whole sky with this planet's star marked"></canvas>
+      <p class="small muted" id="dSkyCap"></p>
+    </section>
+    <section><h3>Size compared</h3><div class="cmps" id="dCmp"></div></section>
+    <section><h3>Details</h3><dl class="dl" id="dDetails"></dl></section>
+    <section id="dSiblingsWrap" hidden>
+      <h3 id="dSiblingsTitle">Other planets of this star</h3>
+      <p class="chips" id="dSiblings"></p>
+    </section>
+    <p class="actions"><button type="button" class="btn" id="share">Copy link to this planet</button> <span class="muted small" id="shareMsg" role="status"></span></p>
+  </div>
+</div>
+
+<script type="module" src="js/main.js"></script>
+<noscript><p class="wrap">This site needs JavaScript to show the planet catalogue.</p></noscript>
+</body>
+</html>

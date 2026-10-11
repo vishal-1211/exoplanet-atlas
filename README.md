@@ -1,0 +1,72 @@
+# Exoplanet Atlas
+
+A free, static website that lists every confirmed planet beyond our Solar System (6,445 at the time of writing). Pick any planet to see a spinning artist's impression, its discovery story, generated facts and a size comparison with Earth and Jupiter.
+
+- **Fast:** the list is virtualised, so only the rows on screen exist. The 3D viewer loads only when you open a planet.
+- **No servers, no database, no libraries:** plain HTML, CSS and JavaScript (the 3D is plain WebGL).
+- **Never depends on NASA while people are using it:** the data is a file in this repository. A weekly job refreshes it, and if NASA is down the job fails and the old data stays.
+- **Works on phones and desktops.** Sharing a planet is a link (`#planet=Kepler-452 b`).
+
+## Run it on your computer
+
+You need Python 3 (or any static file server). From this folder:
+
+```
+python3 -m http.server 8080
+```
+
+Open http://localhost:8080. (Opening `index.html` by double-click will not work, because browsers block loading the data file from `file://`.)
+
+## Put it online for free (GitHub Pages)
+
+1. Create a **public** repository and push this folder to it. (GitHub Pages is free only for public repositories.)
+2. In the repository: **Settings > Pages > Build and deployment > Source: Deploy from a branch**, choose `main` and `/ (root)`, then Save.
+3. After a minute the site is live at `https://<your-username>.github.io/<repository-name>/`.
+
+Then enable the weekly refresh: **Actions** tab > allow workflows > **Refresh planet data** > **Run workflow** once to test it.
+
+## How the data flows
+
+```
+NASA Exoplanet Archive --(weekly job, scripts/fetch-nasa.mjs)--> data/raw/planets.csv
+data/raw/planets.csv --(scripts/build-data.mjs)--> data/planets.json  <-- the website reads only this
+```
+
+- `data/raw/planets.initial.csv` is the first download, kept forever as a backup.
+- If a download fails or looks wrong (fewer than 5,000 planets, not a CSV), nothing is overwritten.
+- The git history keeps every earlier version of the data.
+
+You can also refresh by hand: download the CSV (the query is inside `scripts/fetch-nasa.mjs`), save it as `data/raw/planets.csv`, then run `node scripts/build-data.mjs`.
+
+## What is in the folders
+
+| Path | What it does |
+| --- | --- |
+| `index.html`, `css/style.css` | The page |
+| `js/main.js` | List, search, filters, shelves, the planet panel |
+| `js/model.js` | Turns raw numbers into planet types, temperature classes, the habitable-zone flag and the look of each planet |
+| `js/facts.js` | Generates the facts and details from the numbers, plus short hand-written notes for about 30 famous planets |
+| `js/planet3d.js` | The WebGL planet, star and starfield |
+| `js/compare.js` | Size comparison pictures |
+| `scripts/` | Data download, conversion and tests |
+| `.github/workflows/refresh-data.yml` | The weekly refresh |
+
+Run the checks with `node scripts/test.mjs`. They confirm every planet gets a valid type, no generated fact contains `NaN` or `undefined`, every hand-written note points at a planet that exists, and a few values match NASA's.
+
+## How planets are classified
+
+By radius (Earth radii): under 0.8 Sub-Earth, under 1.25 Earth-sized, under 2 Super-Earth, under 3.5 Mini-Neptune, under 6 Neptune-like, otherwise Gas giant. Anything over 13 Jupiter masses is a Super-Jupiter (it may be a brown dwarf). If a planet has a mass but no radius, a standard mass-radius relation estimates one and the page says so. Planets with neither are **Not identified**.
+
+Temperature class uses NASA's equilibrium temperature. If NASA gives none, it is estimated from the star and orbit and marked *estimated*.
+
+## Honest limits
+
+- **The pictures are artist's impressions.** Almost no exoplanet has been imaged. Each picture is generated from size, temperature and star, and labelled as such.
+- **Equilibrium temperatures ignore atmospheres.** Real surface temperatures differ.
+- **"In the habitable zone" is only about starlight.** It says nothing about water or life.
+- **Masses from radial-velocity discoveries can be minimum values.**
+- The hand-written notes are from general knowledge. Check any you plan to quote.
+
+## Credit
+
+This research has made use of the NASA Exoplanet Archive, which is operated by the California Institute of Technology, under contract with the National Aeronautics and Space Administration under the Exoplanet Exploration Program. Check the archive's acknowledgement page for the current wording. This is an independent project and is not affiliated with NASA.
