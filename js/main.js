@@ -332,6 +332,8 @@ async function ensureView() {
   if (view) return view;
   viewMod = viewMod || await import('./planet3d.js');
   view = new viewMod.PlanetView($('#gl'));
+  view.onLost = () => { $('#gl').style.visibility = 'hidden'; $('#glFallback').hidden = false; $('#glFallback').textContent = 'The 3D view stopped because this device ran out of graphics power. Trying again with a lighter version...'; };
+  view.onRestore = () => { $('#gl').style.visibility = ''; $('#glFallback').hidden = true; };
   return view;
 }
 

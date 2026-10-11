@@ -13,7 +13,7 @@ const VERT = `
 attribute vec2 aPos;
 void main(){ gl_Position = vec4(aPos, 0.0, 1.0); }`;
 
-const FRAG = `
+const fragSrc = (OCT) => `
 #ifdef GL_FRAGMENT_PRECISION_HIGH
 precision highp float;
 #else
@@ -32,8 +32,8 @@ float noise(vec3 x){
 }
 float fbm(vec3 p){
   float a = 0.5, s = 0.0;
-  for (int i = 0; i < 5; i++){ s += a*noise(p); p = p*2.03 + vec3(1.7, 9.2, 3.1); a *= 0.5; }
-  return s;
+  for (int i = 0; i < ${OCT}; i++){ s += a*noise(p); p = p*2.03 + vec3(1.7, 9.2, 3.1); a *= 0.5; }
+  return s * ${(0.96875 / (1 - Math.pow(0.5, OCT))).toFixed(5)};
 }
 vec3 starfield(vec2 uv){
   vec3 col = vec3(0.0);
@@ -125,7 +125,7 @@ void main(){
     c += uLightCol * spec * 0.55;
     c += emis;
     // thermal glow on hot giants, strongest on the dark side
-    c += uC3 * uGlow * 0.18 * (1.0 - lit) * (0.5 + fbm(sp*3.0 + uSeed)) * step(k, 0.5);
+    if (k < 0.5) c += uC3 * uGlow * 0.18 * (1.0 - lit) * (0.5 + fbm(sp*3.0 + uSeed));
     float fres = pow(1.0 - n.z, 2.6);
     c += uAtmCol * uAtmos * fres * (0.12 + 0.9*lit);
     c *= 1.0 - 0.28*(1.0 - n.z);              // gentle limb darkening
@@ -156,15 +156,20 @@ export class PlanetView {
     this.dragging = false; this.params = null; this.error = null;
     this.reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (this.reduceMotion) this.spin = 0;
+    // Phones and small screens get a lighter shader and fewer pixels, so their graphics chip is not overloaded.
+    const small = Math.min(screen.width, screen.height) <= 900 || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+    this.tier = small ? 0 : 1;
+    this.quality = 1; this.slow = 0; this.ema = 16; this.nextDraw = 0;
+    this.onLost = null; this.onRestore = null;
     this.init();
     this.bind();
   }
 
   init() {
-    const gl = this.canvas.getContext('webgl', { antialias: true, alpha: false, powerPreference: 'high-performance' })
+    const gl = this.canvas.getContext('webgl', { antialias: false, alpha: false, depth: false, stencil: false, powerPreference: 'default' })
       || this.canvas.getContext('experimental-webgl');
     if (!gl) { this.error = 'WebGL is not available in this browser.'; return; }
-    this.gl = gl;
+    this.gl = gl; this.error = null;
     const sh = (type, src) => {
       const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s);
       if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) { this.error = gl.getShaderInfoLog(s); console.error(this.error); }
@@ -172,7 +177,7 @@ export class PlanetView {
     };
     const prog = gl.createProgram();
     gl.attachShader(prog, sh(gl.VERTEX_SHADER, VERT));
-    gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FRAG));
+    gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, fragSrc(this.tier ? 5 : 3)));
     gl.linkProgram(prog);
     if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) { this.error = gl.getProgramInfoLog(prog); console.error(this.error); return; }
     this.prog = prog;
@@ -206,8 +211,12 @@ export class PlanetView {
       this.zoom = Math.max(0.6, Math.min(1.6, this.zoom * (e.deltaY > 0 ? 0.95 : 1.05)));
       if (!this.running) this.draw();
     }, { passive: false });
-    c.addEventListener('webglcontextlost', (e) => { e.preventDefault(); this.stop(); });
-    c.addEventListener('webglcontextrestored', () => { this.init(); this.set(this.planet); this.start(); });
+    c.addEventListener('webglcontextlost', (e) => { e.preventDefault(); this.lost = true; this.pause(); if (this.onLost) this.onLost(); });
+    c.addEventListener('webglcontextrestored', () => {
+      this.lost = false; this.tier = 0; this.quality = Math.min(this.quality, 0.7);   // come back lighter than before
+      this.init(); if (this.error) return;
+      this.set(this.planet); if (this.onRestore) this.onRestore(); if (this.wantRun) this.start();
+    });
     if ('ResizeObserver' in window) { this.ro = new ResizeObserver(() => this.resize()); this.ro.observe(c); }
     this.holdUntil = 0; this.visible = true;
     if ('IntersectionObserver' in window) { this.io = new IntersectionObserver((en) => { this.visible = en[en.length - 1].isIntersecting; if (this.visible && !this.running && this.wantRun) this.draw(); }); this.io.observe(c); }
@@ -215,9 +224,11 @@ export class PlanetView {
   }
 
   resize() {
-    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
-    const w = Math.max(2, Math.round(this.canvas.clientWidth * dpr));
-    const h = Math.max(2, Math.round(this.canvas.clientHeight * dpr));
+    const cw = this.canvas.clientWidth || 1, ch = this.canvas.clientHeight || 1;
+    const budget = this.tier ? 1.3e6 : 3.2e5;                      // most pixels we ask the GPU to shade per frame
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.5, Math.sqrt(budget / (cw * ch))) * this.quality;
+    const w = Math.max(2, Math.round(cw * dpr));
+    const h = Math.max(2, Math.round(ch * dpr));
     if (this.canvas.width !== w || this.canvas.height !== h) { this.canvas.width = w; this.canvas.height = h; }
     if (this.gl) this.gl.viewport(0, 0, w, h);
     if (!this.running) this.draw();
@@ -287,8 +298,13 @@ export class PlanetView {
     if (!this.running) return;
     const dt = Math.min(0.1, (now - this.last) / 1000); this.last = now;
     if (now < this.holdUntil || !this.visible) { this.raf = requestAnimationFrame(this.frame); return; }
+    if (!this.tier && now < this.nextDraw) { this.raf = requestAnimationFrame(this.frame); return; }   // phones: about 30 frames a second
     if (!this.dragging) this.angle += this.spin * dt;
     this.draw();
+    this.nextDraw = now + 30;
+    // If frames take too long, quietly draw fewer pixels.
+    this.ema = this.ema * 0.9 + Math.min(200, dt * 1000) * 0.1;
+    if (this.ema > 60 && this.quality > 0.5 && ++this.slow > 20) { this.quality *= 0.8; this.slow = 0; this.ema = 30; this.resize(); }
     this.raf = requestAnimationFrame(this.frame);
   };
   start() { this.wantRun = true; if (this.running || !this.gl) return; this.running = true; this.last = performance.now(); this.raf = requestAnimationFrame(this.frame); }
