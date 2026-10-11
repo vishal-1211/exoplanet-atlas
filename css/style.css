@@ -155,10 +155,10 @@ h1 span { font-variant-numeric: tabular-nums; }
 #gl:active { cursor: grabbing; }
 .fallback { position: absolute; inset: 0; display: flex; align-items: flex-end; padding: 18px; font-size: .85rem; color: #fff; text-shadow: 0 1px 4px #000; }
 .fallback[hidden] { display: none; }
-.back { position: absolute; top: 16px; left: 16px; z-index: 3; display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px 9px 10px; border-radius: 999px; border: 1px solid var(--line); background: rgba(7, 11, 26, .55); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); color: var(--ink); font-weight: 500; }
+.back { position: absolute; top: 16px; left: 16px; z-index: 3; display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px 9px 10px; border-radius: 999px; border: 1px solid var(--line); background: rgba(7, 11, 26, .78); color: var(--ink); font-weight: 500; }
 .back:hover { border-color: var(--dust); }
 .stage-note { position: absolute; left: 18px; right: 18px; bottom: 14px; margin: 0; max-width: 60ch; font-size: .8rem; line-height: 1.45; color: var(--dust); text-shadow: 0 1px 6px #000; pointer-events: none; }
-.sheet { overflow-y: auto; overscroll-behavior: contain; padding: 64px clamp(22px, 4vw, 56px) 90px; border-left: 1px solid var(--hair); background: linear-gradient(180deg, rgba(13, 21, 48, .7), var(--bg) 70%); }
+.sheet { overflow-y: auto; overscroll-behavior: contain; contain: layout paint; -webkit-overflow-scrolling: touch; padding: 64px clamp(22px, 4vw, 56px) 90px; border-left: 1px solid var(--hair); background: linear-gradient(180deg, rgba(13, 21, 48, .7), var(--bg) 70%); }
 .sheet > * { max-width: 600px; }
 .sheet h2 { margin: 0 0 8px; font-weight: 300; font-size: clamp(2.1rem, 4.6vw, 3.5rem); line-height: 1.04; letter-spacing: -.035em; color: var(--ink); overflow-wrap: anywhere; }
 .sub { margin: 0 0 14px; color: var(--dust); font-size: 1.05rem; }
@@ -175,8 +175,22 @@ h1 span { font-variant-numeric: tabular-nums; }
 .sheet h3 { margin: 40px 0 12px; font-size: 1rem; font-weight: 600; letter-spacing: -.01em; color: var(--ink); }
 .sheet p { margin: 0 0 12px; }
 .note { margin: 28px 0 0; padding: 2px 0 2px 18px; border-left: 2px solid var(--amber); color: var(--ink); font-size: 1.08rem; line-height: 1.55; }
-.facts { margin: 0; padding: 0; list-style: none; display: grid; gap: 13px; }
-.facts li { color: var(--body); }
+.facts { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.fact { position: relative; display: flex; gap: 14px; padding: 16px 16px 16px 14px; border-radius: 18px; border: 1px solid var(--hair); background: linear-gradient(135deg, color-mix(in srgb, var(--c) 11%, transparent), rgba(160, 180, 255, .035) 60%); overflow: hidden; }
+.fact::before { content: ''; position: absolute; left: 0; top: 14px; bottom: 14px; width: 3px; border-radius: 0 3px 3px 0; background: var(--c); }
+.fact:first-child { grid-column: 1 / -1; padding: 20px 20px 20px 18px; background: linear-gradient(135deg, color-mix(in srgb, var(--c) 18%, transparent), rgba(160, 180, 255, .04) 70%); }
+.f-ico { flex: none; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 12px; color: var(--c); background: color-mix(in srgb, var(--c) 16%, transparent); }
+.f-ico svg { width: 20px; height: 20px; }
+.f-body { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.f-label { color: var(--c); font-size: .78rem; font-weight: 600; letter-spacing: .01em; }
+.f-big { color: var(--ink); font-size: 1.75rem; white-space: nowrap; font-weight: 300; letter-spacing: -.03em; line-height: 1.1; overflow-wrap: anywhere; }
+.f-big small { font-size: .85rem; font-weight: 400; color: var(--dust); letter-spacing: 0; }
+.fact:first-child .f-big { font-size: 2.6rem; }
+.f-body p { margin: 4px 0 0 !important; color: var(--body); font-size: .9rem; line-height: 1.5; }
+.fact:first-child .f-body p { font-size: .98rem; }
+@media (max-width: 520px) { .facts { grid-template-columns: 1fr; } }
+/* while the planet view is open, the page behind it does no painting at all */
+body.has-detail #sky, body.has-detail .veil, body.has-detail main, body.has-detail .bar, body.has-detail .foot { visibility: hidden; }
 .lc { margin: 16px 0 0; }
 .lc svg { width: 100%; height: auto; display: block; }
 .lc .ax { fill: var(--dust2); font-size: 10.5px; font-family: var(--font); }
@@ -334,3 +348,31 @@ h1 span { font-variant-numeric: tabular-nums; }
   .searchbtn { margin-left: auto; padding: 0 12px; }
   .searchbtn span, .searchbtn kbd { display: none; }
 }
+
+/* ---- modern dropdown ---- */
+.field { position: relative; }
+.field .dd-native, .field select.dd-native { position: absolute !important; left: 0; top: 0; width: 1px !important; height: 1px !important; min-width: 0 !important; max-width: 1px; padding: 0; border: 0; opacity: 0; pointer-events: none; overflow: hidden; clip: rect(0 0 0 0); }
+.dd { position: relative; }
+.dd-btn { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-width: 168px; height: 42px; padding: 0 14px; border-radius: 14px; border: 1px solid var(--hair); background: rgba(160, 180, 255, .07); color: var(--ink); font: inherit; font-size: .92rem; text-align: left; cursor: pointer; transition: border-color .15s, background .15s; }
+.dd-btn:hover { border-color: var(--line); background: rgba(160, 180, 255, .1); }
+.dd-btn:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+.dd-btn svg { flex: none; color: var(--dust); transition: transform .18s; }
+.dd.open .dd-btn { border-color: rgba(255, 180, 84, .6); background: rgba(160, 180, 255, .12); }
+.dd.open .dd-btn svg { transform: rotate(180deg); color: var(--amber); }
+.dd.set .dd-btn { border-color: rgba(255, 180, 84, .45); }
+.dd.set .dd-val::before { content: ''; display: inline-block; width: 6px; height: 6px; margin-right: 9px; border-radius: 50%; background: var(--amber); vertical-align: 2px; }
+.dd-val { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dd-menu { position: absolute; z-index: 40; left: 0; top: calc(100% + 8px); min-width: 100%; width: max-content; max-width: min(360px, 88vw); max-height: min(340px, 52vh); overflow-y: auto; margin: 0; padding: 6px; list-style: none; border-radius: 16px; border: 1px solid var(--line); background: #0E1633; box-shadow: 0 24px 60px -12px rgba(0, 0, 0, .85), 0 0 0 1px rgba(255, 255, 255, .03) inset; scrollbar-width: thin; scrollbar-color: rgba(160, 180, 255, .3) transparent; animation: ddin .14s ease-out; }
+.dd.up .dd-menu { top: auto; bottom: calc(100% + 8px); }
+.dd-menu[hidden] { display: none; }
+@keyframes ddin { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+.dd-menu li { display: flex; align-items: center; gap: 12px; padding: 9px 12px; border-radius: 10px; color: var(--body); font-size: .92rem; cursor: pointer; }
+.dd-menu li.act { background: rgba(160, 180, 255, .13); color: var(--ink); }
+.dd-l { flex: 1; }
+.dd-h { color: var(--dust2); font-size: .8rem; }
+.dd-ck { flex: none; color: var(--amber); opacity: 0; }
+.dd-menu li[aria-selected="true"] { color: var(--ink); }
+.dd-menu li[aria-selected="true"] .dd-ck { opacity: 1; }
+@media (max-width: 760px) { .fields .field { min-width: 0; } .dd-btn { min-width: 0; } .dd-menu { max-width: 78vw; } .fields .field:nth-child(even) .dd-menu { left: auto; right: 0; } }
+@media (prefers-reduced-motion: reduce) { .dd-menu { animation: none; } }
+.fact:last-child:nth-child(even) { grid-column: 1 / -1; }

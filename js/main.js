@@ -4,6 +4,7 @@ import { comparisonHTML } from './compare.js';
 import { Sky, prepare, drawMiniSky } from './sky.js';
 import { heroCurve, transitCurve } from './charts.js';
 import { buildLearn } from './learn.js';
+import { enhanceSelect, refreshSelects } from './dropdown.js';
 
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -213,6 +214,8 @@ function buildControls() {
   $('#typeChips').innerHTML = TYPES.filter((t) => counts[t.id]).map((t) =>
     `<button type="button" class="chip" data-type="${t.id}" aria-pressed="false" title="${esc(t.blurb)}"><i class="dot" style="--c:${TYPE_COLOR[t.id]}"></i>${t.label} <small>${counts[t.id].toLocaleString('en-US')}</small></button>`).join('');
 
+  ['#sort', '#temp', '#method', '#decade'].forEach((id) => enhanceSelect($(id)));
+
   let timer;
   $('#q').addEventListener('input', (e) => { clearTimeout(timer); timer = setTimeout(() => { state.q = e.target.value; applyFilters(); }, 120); });
   $('#q').addEventListener('keydown', (e) => { if (e.key === 'Escape') e.target.blur(); });
@@ -236,6 +239,7 @@ function buildControls() {
 function syncControls() {
   $('#q').value = state.q;
   $('#sort').value = state.sort; $('#temp').value = state.temp; $('#method').value = state.method; $('#decade').value = state.decade;
+  refreshSelects();
   $('#hz').setAttribute('aria-pressed', String(state.hz));
   document.querySelectorAll('#typeChips .chip').forEach((c) => {
     const on = state.types.has(c.dataset.type);
@@ -320,6 +324,8 @@ listEl.addEventListener('click', (e) => {
 
 // ---------------------------------------------------------------- planet view
 const detail = $('#detail');
+// Freeze the 3D planet while the sheet scrolls, so scrolling gets the whole GPU.
+['#sheet', '#detail'].forEach((id) => $(id).addEventListener('scroll', () => { if (view) view.hold(160); }, { passive: true }));
 let view = null, viewMod = null, lastFocus = null;
 
 async function ensureView() {
@@ -327,6 +333,38 @@ async function ensureView() {
   viewMod = viewMod || await import('./planet3d.js');
   view = new viewMod.PlanetView($('#gl'));
   return view;
+}
+
+// ---- fact cards: pick an icon, a short label and a big number out of each fact sentence
+const ICON = {
+  year: '<circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/>',
+  distance: '<path d="M4 12h13M13 7l5 5-5 5"/><circle cx="4" cy="12" r="1.2" fill="currentColor"/>',
+  size: '<circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="9" stroke-dasharray="2 3"/>',
+  mass: '<path d="M12 4v16M6 20h12M5 8h14"/><path d="M5 8l-2 6a3 3 0 0 0 4 0zM19 8l-2 6a3 3 0 0 0 4 0z"/>',
+  temp: '<path d="M10 14V6a2 2 0 0 1 4 0v8a4 4 0 1 1-4 0z"/>',
+  light: '<circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6 7 7M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4"/>',
+  transit: '<path d="M3 8h5l1.5 5h5L16 8h5"/><circle cx="12" cy="18" r="2"/>',
+  star: '<path d="m12 3 2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.5 6.6 19.5l1.2-6L3.3 9.3l6.1-.7z"/>',
+  spark: '<path d="M12 3v6M12 15v6M3 12h6M15 12h6"/>',
+};
+const FACT_RULES = [
+  [/\b(year here|one year|orbit takes|year lasts)\b/i, 'year', 'Year length', '#FFB454'],
+  [/\b(light-years|closest|light we see)\b/i, 'distance', 'Distance', '#7ED6FF'],
+  [/\b(block|passes in front|transit)\b/i, 'transit', 'Transit', '#7ED6FF'],
+  [/\b(gravity|weigh)\b/i, 'mass', 'Surface gravity', '#B58CFF'],
+  [/\b(density|float|metal core)\b/i, 'mass', 'Density', '#B58CFF'],
+  [/\bmass\b/i, 'mass', 'Mass', '#B58CFF'],
+  [/\b(radius|wider|width|larger|smaller|size)\b/i, 'size', 'Size', '#6CC08B'],
+  [/\b(starlight|habitable|sunlight|as much light)\b/i, 'light', 'Starlight', '#FFD27A'],
+  [/\b(\bK\b|hot|cold|freez|melt|lava|boil|temperature|warm)\b/i, 'temp', 'Temperature', '#FF7A45'],
+  [/\b(star|dwarf|sun|spectral)\b/i, 'star', 'Its star', '#FFB454'],
+];
+const BIG = /(\d[\d,]*(?:\.\d+)?)\s?(×|%|light-years?|days?|hours?|minutes?|years?|K\b|g\/cm³|kg|AU|times)/;
+function factCard(text) {
+  const [, icon, label, color] = FACT_RULES.find(([re]) => re.test(text)) || [0, 'spark', 'Did you know', '#8F9BC4'];
+  const m = text.match(BIG);
+  const big = m ? `<span class="f-big">${esc(m[1])}<small>${esc(/^[×%]$/.test(m[2]) ? m[2] : ' ' + m[2])}</small></span>` : '';
+  return `<li class="fact" style="--c:${color}"><span class="f-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[icon]}</svg></span><div class="f-body"><span class="f-label">${label}</span>${big}<p>${esc(text)}</p></div></li>`;
 }
 
 function splitDuration(p) {
@@ -358,7 +396,7 @@ function fillDetail(p) {
 
   const note = editorNote(p);
   $('#dNote').hidden = !note; $('#dNote').textContent = note || '';
-  $('#dFacts').innerHTML = topFacts(p, ALL, 8).filter((f) => f !== note).map((f) => `<li>${esc(f)}</li>`).join('');
+  $('#dFacts').innerHTML = topFacts(p, ALL, 8).filter((f) => f !== note).map(factCard).join('');
   $('#dHow').textContent = HOW_FOUND[p.method] || 'The discovery method is not identified.';
   const dep = transitDepth(p);
   const showCurve = p.method === 'Transit' && dep != null && dep > 1e-6 && dep < 0.5;
@@ -388,7 +426,7 @@ async function openPlanet(p, push = true) {
   if (!wasOpen) lastFocus = document.activeElement;
   fillDetail(p);
   detail.hidden = false;
-  document.body.classList.add('lock');
+  document.body.classList.add('lock', 'has-detail');
   if (sky) sky.pause();
   if (push) {
     const url = '#planet=' + encodeURIComponent(p.name);
@@ -412,7 +450,7 @@ async function openPlanet(p, push = true) {
 function hideDetail() {
   if (detail.hidden) return;
   detail.hidden = true;
-  document.body.classList.remove('lock');
+  document.body.classList.remove('lock', 'has-detail');
   document.title = 'Exoplanet Atlas';
   if (view) view.stop();
   if (sky) sky.start();

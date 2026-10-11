@@ -209,6 +209,8 @@ export class PlanetView {
     c.addEventListener('webglcontextlost', (e) => { e.preventDefault(); this.stop(); });
     c.addEventListener('webglcontextrestored', () => { this.init(); this.set(this.planet); this.start(); });
     if ('ResizeObserver' in window) { this.ro = new ResizeObserver(() => this.resize()); this.ro.observe(c); }
+    this.holdUntil = 0; this.visible = true;
+    if ('IntersectionObserver' in window) { this.io = new IntersectionObserver((en) => { this.visible = en[en.length - 1].isIntersecting; if (this.visible && !this.running && this.wantRun) this.draw(); }); this.io.observe(c); }
     document.addEventListener('visibilitychange', () => { if (document.hidden) this.pause(); else if (this.wantRun) this.start(); });
   }
 
@@ -284,11 +286,13 @@ export class PlanetView {
   frame = (now) => {
     if (!this.running) return;
     const dt = Math.min(0.1, (now - this.last) / 1000); this.last = now;
+    if (now < this.holdUntil || !this.visible) { this.raf = requestAnimationFrame(this.frame); return; }
     if (!this.dragging) this.angle += this.spin * dt;
     this.draw();
     this.raf = requestAnimationFrame(this.frame);
   };
   start() { this.wantRun = true; if (this.running || !this.gl) return; this.running = true; this.last = performance.now(); this.raf = requestAnimationFrame(this.frame); }
+  hold(ms) { this.holdUntil = performance.now() + ms; }
   pause() { this.running = false; cancelAnimationFrame(this.raf); }
   stop() { this.wantRun = false; this.pause(); }
 }
