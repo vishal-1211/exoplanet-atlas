@@ -1,10 +1,12 @@
 // Builds the header menu from js/site.js. The header in each HTML file is only a brand and a search
 // button, so changing the menu never means rewriting thousands of pages.
-import { HOME, GROUPS } from './site.js';
+import { HOME, GROUPS, HI_FILES } from './site.js';
 import { t, lang, setLang, applyLang } from './i18n.js';
 
 const here = (location.pathname.split('/').pop() || 'index.html');
-const base = document.querySelector('base') ? '' : '';            // planet pages set <base href="../">
+const base = '';
+const isHiPage = location.pathname.includes('/hi/');   // /hi/ pages set <base href="../">
+const hrefOf = (f) => (isHiPage && HI_FILES.includes(f) ? 'hi/' + f : f);
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const cur = (f) => (f === here || (f === 'index.html' && here === '') ? ' aria-current="page"' : '');
 const groupHere = (g) => g.items.some(([f]) => f === here);
@@ -17,7 +19,7 @@ if (nav && bar) {
     <div class="nav-g${groupHere(g) ? ' here' : ''}">
       <button type="button" class="nav-b" aria-expanded="false" aria-controls="menu-${g.id}">${esc(t(g.label))}${CARET}</button>
       <div class="nav-menu" id="menu-${g.id}" hidden>${g.items.map(([f, label, blurb]) =>
-        `<a href="${f}"${cur(f)}><b>${esc(t(label))}</b><span>${esc(t(blurb))}</span></a>`).join('')}</div>
+        `<a href="${hrefOf(f)}"${cur(f)}><b>${esc(t(label))}</b><span>${esc(t(blurb))}</span></a>`).join('')}</div>
     </div>`).join('');
 
   // language button + phone menu button, placed just before the search button
@@ -32,7 +34,7 @@ if (nav && bar) {
   sheet.setAttribute('role', 'dialog'); sheet.setAttribute('aria-label', 'Site menu');
   sheet.innerHTML = `<div class="ms-top"><b>Exoplanet Atlas</b><button type="button" class="ms-x" id="menuX">${esc(t('Close'))}</button></div>
     <a class="ms-home" href="${HOME[0]}"${cur(HOME[0])}>${esc(t(HOME[1]))}</a>` +
-    GROUPS.map((g) => `<h2>${esc(t(g.label))}</h2>${g.items.map(([f, label]) => `<a href="${f}"${cur(f)}>${esc(t(label))}</a>`).join('')}`).join('');
+    GROUPS.map((g) => `<h2>${esc(t(g.label))}</h2>${g.items.map(([f, label]) => `<a href="${hrefOf(f)}"${cur(f)}>${esc(t(label))}</a>`).join('')}`).join('');
   document.body.appendChild(sheet);
 
   const closeMenus = () => {
@@ -58,8 +60,23 @@ if (nav && bar) {
   document.getElementById('menuX').addEventListener('click', () => setSheet(false));
   sheet.addEventListener('click', (e) => { if (e.target.closest('a')) setSheet(false); });
   window.addEventListener('resize', () => { if (window.innerWidth > 860) setSheet(false); });
-  document.getElementById('langBtn').addEventListener('click', () => setLang(lang() === 'hi' ? 'en' : 'hi'));
+  document.getElementById('langBtn').addEventListener('click', () => {
+    const to = lang() === 'hi' ? 'en' : 'hi';
+    // pages with a real /hi/ copy switch by address, so the URL always matches the language
+    if (HI_FILES.includes(here)) {
+      try { localStorage.setItem('lang', to); } catch { /* storage blocked */ }
+      const root = new URL(isHiPage ? '../' : './', location.href);
+      location.href = new URL(to === 'hi' ? 'hi/' + here : here, root).href;
+      return;
+    }
+    setLang(to);
+  });
   window.addEventListener('scroll', () => bar.classList.toggle('scrolled', window.scrollY > 8), { passive: true });
 }
 applyLang();
 const sb = document.querySelector('.searchbtn span'); if (sb) sb.textContent = t('Search');
+
+// offline support for pages already visited (see sw.js)
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+  navigator.serviceWorker.register(new URL('sw.js', document.baseURI).href).catch(() => { /* optional */ });
+}

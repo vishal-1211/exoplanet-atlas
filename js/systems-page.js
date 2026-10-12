@@ -4,12 +4,14 @@ import { systemSVG, hzRange } from './system.js';
 import { typeLabel, tempLabel, fmt } from './model.js';
 import { fmtDuration } from './facts.js';
 import { attachPicker } from './picker.js';
+import { OrbitView } from './orbit.js';
 
 const { all } = await boot();
 const sys = new Map();
 for (const p of all) { if (!sys.has(p.host)) sys.set(p.host, []); sys.get(p.host).push(p); }
 const hosts = [...sys.entries()].map(([host, list]) => ({ host, n: list.length })).sort((a, b) => b.n - a.n || a.host.localeCompare(b.host, 'en', { numeric: true }));
 
+let orbit = null;
 function show(host, push = true) {
   const list = sys.get(host);
   if (!list) return;
@@ -22,7 +24,12 @@ function show(host, push = true) {
     <p class="muted">${list.length} known planet${list.length > 1 ? 's' : ''}${star ? '. ' + esc(star) : ''}.${hz ? ` Habitable-zone starlight falls between ${fmt(hz.inner, 2)} and ${fmt(hz.outer, 2)} AU from this star (estimated from its size and temperature).` : ''}</p>
     <div class="chartbox">${systemSVG(list, { link: planetHref, id: 'sp' })}</div>
     <p class="small muted">Distances are on a log scale, so each step to the right is ten times farther. Circle sizes show how big each planet is next to the others, but are not on the same scale as the distances. Click a planet to open it.</p>
+    <h3 class="h3">Orbits, seen from above</h3><canvas id="sysOrbit" class="orbitcv" role="img"></canvas>
+    <p class="small muted">Drawn from each planet's real orbit size and shape. Distances use a square-root scale and speeds are compressed. The tilt of each orbit is not known, so all point the same way. Green is the habitable-zone band.</p>
     <div class="tablewrap"><table class="pl-table sys-table"><thead><tr><th>Planet</th><th>Type</th><th>Distance from star</th><th>Year</th><th>Size</th><th>Temperature</th></tr></thead><tbody>${rows}</tbody></table></div></section>`;
+  if (orbit) orbit.stop();
+  orbit = new OrbitView($('#sysOrbit'), { reduceMotion: matchMedia('(prefers-reduced-motion: reduce)').matches });
+  orbit.set(list); orbit.start();
   if (push) history.replaceState(null, '', '#' + encodeURIComponent(host));
   document.title = `${host}: planets of the system · Exoplanet Atlas`;
 }

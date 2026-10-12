@@ -2,7 +2,8 @@
 // Run:  node scripts/build-pages.mjs     (the generated files are committed, so hosting needs no build step)
 import fs from 'fs';
 
-import { SITE, ALL_PAGES } from '../js/site.js';
+import { SITE, ALL_PAGES, HI_FILES } from '../js/site.js';
+import { translate } from '../js/i18n.js';
 const esc = (s) => s.replace(/&/g, '&amp;');
 const HELP_BODY = `<p class="sec-lede">You don’t need a degree or a telescope to help find planets. Professional astronomers have more data than they can look through, and volunteers have already discovered real worlds. Here are two projects that are all about exoplanets.</p>
       <div class="help-grid">
@@ -137,6 +138,13 @@ const PAGES = [
       <h2 class="h2">Download</h2>
       <p id="dlRow"><button type="button" class="btn primary" id="dlCsv">Download CSV</button> <button type="button" class="btn" id="dlJson">Download JSON</button> <span class="muted small" id="dlInfo"></span></p>
       <p class="small muted">Includes the values as shown on this site, with estimates marked in the "estimated" columns. For the original, go to the <a href="https://exoplanetarchive.ipac.caltech.edu/" rel="noopener">NASA Exoplanet Archive</a>.</p>
+      <h2 class="h2">For developers</h2>
+      <p class="sec-lede">The same data is available as plain files that update with every refresh. They can be read from any website (CORS is open). Please keep the acknowledgement below if you publish something with them.</p>
+      <ul class="pl-links"><li><a href="api/v1/planets.json">api/v1/planets.json</a>: every planet, one object each, with a short description of each field in <code>meta.columns</code></li>
+      <li><a href="api/v1/planets.csv">api/v1/planets.csv</a>: the same as a spreadsheet</li>
+      <li><a href="data/changes.json">data/changes.json</a>: what changed in each refresh</li>
+${fs.existsSync('data/candidates.json') ? `      <li><a href="data/candidates.json">data/candidates.json</a>: unconfirmed TESS and Kepler candidates (compact table: <code>cols</code> names the columns, <code>rows</code> holds the values)</li>` : ''}
+      <li><a href="feed.xml">feed.xml</a>: Atom feed of new planets</li></ul>
       <h2 class="h2">Cite</h2>
       <pre class="cite" id="citeText"></pre>
       <p><button type="button" class="btn" id="citeCopy">Copy citation</button> <button type="button" class="btn" id="bibCopy">Copy BibTeX</button> <span class="muted small" id="citeMsg" role="status"></span></p>
@@ -152,6 +160,25 @@ const PAGES = [
     body: `<p class="sec-lede">Five short activities that use real planets. Print this page (or save it as a PDF), hand it out, and use the answer key at the end. Numbers are computed from the catalogue.</p>
       <p class="noprint"><button type="button" class="btn primary" id="printBtn">Print this page</button></p>
       <div id="clsOut"></div>` },
+  { file: 'candidates.html', title: 'Planet candidates: signals not yet confirmed', script: 'js/candidates-page.js',
+    desc: 'Thousands of possible planets found by TESS and Kepler that astronomers have not yet confirmed. Search and sort the list.',
+    body: `<p class="sec-lede" id="cdLede">Loading the candidate list…</p>
+      <aside class="callout"><b>These are not confirmed planets.</b> A candidate is a dip in a star's light that looks like a planet crossing it. Many turn out to be something else, such as two stars orbiting each other. They are listed here because astronomers (and volunteers on the <a href="help.html">Help find planets</a> page) follow them up. Confirmed planets are in the <a href="index.html">catalogue</a>.</aside>
+      <div id="cdControls"></div>
+      <div id="cdOut"></div>
+      <p class="small muted">From the NASA Exoplanet Archive's TESS Project Candidates and Kepler cumulative tables. Size and temperature are estimates from the transit and the star, not measurements of the planet itself.</p>` },
+  { file: 'next.html', title: 'What is coming next in the search for planets', script: 'js/help.js',
+    desc: 'The telescopes and missions that will change exoplanet science next: Roman, PLATO, Ariel, Gaia data releases and the Habitable Worlds Observatory.',
+    body: `<p class="sec-lede">The catalogue grows every week, and the next few years bring instruments built for new kinds of discovery. Dates are from the agencies' own announcements as of October 2026 and can change.</p>
+      <div class="help-grid">
+        <article class="help-card"><div class="help-tag">Launched August 2026</div><h2 class="h2">Nancy Grace Roman Space Telescope</h2><p>NASA's wide-field telescope launched on 30 August 2026 on a Falcon Heavy. It is travelling to a point about 1.5 million km from Earth, a journey of around three months, followed by about three months of testing. First public images are targeted for early 2027. For planets it will watch millions of stars towards the centre of the Milky Way for the brief brightening caused by gravitational microlensing, which can find planets that other methods cannot, and it carries a coronagraph to test blocking starlight to photograph planets.</p><p><a class="link" href="https://science.nasa.gov/mission/roman-space-telescope/" rel="noopener">NASA's Roman page ↗</a></p></article>
+        <article class="help-card"><div class="help-tag">Planned: March 2027</div><h2 class="h2">PLATO</h2><p>ESA's mission has 26 cameras and will stare at huge patches of sky for years. Its goal is to find Earth-sized planets in the habitable zone of Sun-like stars, measure their sizes, and use tiny changes in starlight to learn the stars' ages. It is planned to launch on an Ariane 6 rocket.</p><p><a class="link" href="https://www.esa.int/PLATO" rel="noopener">ESA's PLATO page ↗</a></p></article>
+        <article class="help-card"><div class="help-tag">Planned: 2029</div><h2 class="h2">Ariel</h2><p>ESA's Ariel will not look for new planets. It will study the atmospheres of about 1,000 known ones, from rocky worlds to gas giants, to make a chemical census. It will sit at the same distant point as Webb and scan the whole sky roughly every three months.</p><p><a class="link" href="https://www.esa.int/Science_Exploration/Space_Science/Ariel_factsheet" rel="noopener">ESA's Ariel page ↗</a></p></article>
+        <article class="help-card"><div class="help-tag">Operating now</div><h2 class="h2">Webb, TESS and CHEOPS</h2><p>The James Webb Space Telescope reads the air of planets as starlight passes through it. TESS keeps surveying nearly the whole sky for transits and feeds the candidate list. ESA's CHEOPS measures the exact sizes of planets already known. All three keep adding to the catalogue.</p><p><a class="link" href="seen.html">Atmospheres studied so far →</a> <a class="link" href="candidates.html">Candidates →</a></p></article>
+        <article class="help-card"><div class="help-tag">Data from Gaia</div><h2 class="h2">Gaia's star wobbles</h2><p>ESA's Gaia finished observing and was retired in 2025, but its measurements of tiny star movements are still being turned into planet discoveries. Astronomers expect its later data releases to reveal many giant planets that tug their stars sideways. Check ESA for the release date.</p><p><a class="link" href="https://www.cosmos.esa.int/web/gaia/release" rel="noopener">Gaia data releases ↗</a></p></article>
+        <article class="help-card"><div class="help-tag">Concept: no launch date</div><h2 class="h2">Habitable Worlds Observatory</h2><p>NASA's plan for a large space telescope built to photograph Earth-sized planets around Sun-like stars and search their air for gases that could signal life. It is still being designed, and no launch date is set. Very large ground telescopes in Chile are also due late this decade.</p><p><a class="link" href="https://science.nasa.gov/astrophysics/programs/habitable-worlds-observatory/" rel="noopener">NASA's HWO page ↗</a></p></article>
+      </div>
+      <p class="small muted">This page is written by hand. This site's catalogue updates itself every day; this list does not, so check the agency pages above for current schedules.</p>` },
   { file: 'help.html', title: 'Help find planets: citizen science', script: 'js/help.js',
     desc: 'Citizen science for exoplanets: help find new planets in NASA TESS data with Planet Hunters TESS, or time planets crossing their stars with NASA Exoplanet Watch.',
     body: HELP_BODY },
@@ -205,7 +232,30 @@ ${header(p.file)}
 </html>
 `;
 
-for (const p of PAGES) fs.writeFileSync(p.file, page(p));
+// Hindi copies under /hi/, so search engines can index them. Text marked data-i is translated here;
+// js/i18n.js (which reads <html lang="hi">) covers the parts the page script builds.
+// The translations have not been checked by a native speaker.
+const hiPage = (html, file) => {
+  const url = SITE + file, hiUrl = SITE + 'hi/' + file;
+  return html.replace('<html lang="en">', '<html lang="hi">')
+    .replace('<head>\n<meta charset="utf-8">', '<head>\n<meta charset="utf-8">\n<base href="../">')
+    .replace(/<link rel="canonical" href="[^"]*">/, `<link rel="canonical" href="${hiUrl}">\n<link rel="alternate" hreflang="en" href="${url}">\n<link rel="alternate" hreflang="hi" href="${hiUrl}">\n<link rel="alternate" hreflang="x-default" href="${url}">`)
+    .replace(/<meta property="og:url" content="[^"]*">/, `<meta property="og:url" content="${hiUrl}">`)
+    .replace(/<(h1|h2|p|b|span|a|button|summary|label|li)([^>]*) data-i>([^<]*)</g, (m, tag, attrs, text) => {
+      const hi = translate(text.replace(/&amp;/g, '&'));
+      return `<${tag}${attrs} data-i="${text.replace(/"/g, '&quot;')}">${hi === text.replace(/&amp;/g, '&') ? text : esc(hi)}<`;
+    });
+};
+const enAlt = (html, file) => html.replace(/<link rel="canonical" href="[^"]*">/, (m) => `${m}\n<link rel="alternate" hreflang="en" href="${SITE}${file}">\n<link rel="alternate" hreflang="hi" href="${SITE}hi/${file}">\n<link rel="alternate" hreflang="x-default" href="${SITE}${file}">`);
+fs.mkdirSync('hi', { recursive: true });
+for (const p of PAGES) {
+  let html = page(p);
+  if (HI_FILES.includes(p.file)) {
+    fs.writeFileSync('hi/' + p.file, hiPage(html, p.file));
+    html = enAlt(html, p.file);
+  }
+  fs.writeFileSync(p.file, html);
+}
 
 // Embeddable single-planet card (not listed in the sitemap, and not for search engines)
 fs.writeFileSync('embed.html', `<!doctype html>

@@ -1,0 +1,24 @@
+<!doctype html><meta charset="utf-8"><title>og render</title>
+<script type="module">
+// Used by scripts/build-og.py: draws the share card for the notable planets and hands the pictures back.
+import { hydrate, esi, slug } from '../js/model.js';
+import { makeCard } from '../js/sharecard.js';
+const data = await (await fetch('../data/planets.json')).json();
+const P = hydrate(data);
+const have = new Set(window.HAVE || []);
+const pick = new Map();
+const add = (list, n) => { let k = 0; for (const p of list) { if (k >= n) break; if (!pick.has(p.name)) { pick.set(p.name, p); k++; } } };
+const by = (f) => (a, b) => f(b) - f(a);
+add(P.filter((p) => esi(p) != null).sort(by(esi)), 120);                      // most Earth-like
+add(P.filter((p) => p.dist_ly > 0).sort((a, b) => a.dist_ly - b.dist_ly), 70); // nearest
+const ys = P.map((p) => p.year || 0); const latest = Math.max(...ys);
+add(P.filter((p) => p.year >= latest - 1 && !/^KOI-/.test(p.name)).sort((a, b) => b.year - a.year), 60); // newest
+const named = ['HD 209458 b', 'HD 189733 b', 'WASP-39 b', 'WASP-96 b', 'WASP-76 b', 'KELT-9 b', 'K2-18 b', 'TRAPPIST-1 b', 'TRAPPIST-1 e', 'Kepler-452 b', 'Kepler-22 b', '51 Peg b', 'Proxima Cen b', 'Kepler-16 b', 'PSR B1257+12 b', 'HR 8799 b', 'Beta Pic b', 'GJ 1214 b', 'LHS 1140 b', '55 Cnc e', 'TOI-700 d', '55 Cnc e'];
+add(P.filter((p) => named.includes(p.name)), 40);
+const out = [];
+for (const p of pick.values()) {
+  const s = slug(p.name); if (have.has(s)) continue;
+  out.push([s, makeCard({ ...p, slug: s }).toDataURL('image/jpeg', 0.7).split(',')[1]]);
+}
+window.RESULT = { total: pick.size, cards: out };
+</script>

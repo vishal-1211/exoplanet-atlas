@@ -4,7 +4,7 @@
 import fs from 'node:fs';
 import { hydrate, typeLabel, RE_PER_RJ, slug as modelSlug, isKOI, KOI_NOTE, archiveUrl } from '../js/model.js';
 import { systemSVG } from '../js/system.js';
-import { ALL_PAGES } from '../js/site.js';
+import { ALL_PAGES, HI_FILES } from '../js/site.js';
 import { details, topFacts, summaryLine, fmtDuration } from '../js/facts.js';
 
 export const SITE = 'https://exoplanet-atlas.macrocosm.workers.dev/';
@@ -20,7 +20,7 @@ const header = idx.match(/<!--HEADER-->[\s\S]*?<!--\/HEADER-->/)[0].replace(/ ar
 const ICON = idx.match(/<link rel="icon"[^>]*>/)[0];
 const CREDIT = 'This research has made use of the NASA Exoplanet Archive, which is operated by the California Institute of Technology, under contract with the National Aeronautics and Space Administration under the Exoplanet Exploration Program. This is an independent project and is not affiliated with NASA.';
 
-const shell = ({ title, desc, path, body, jsonld = '' }) => `<!doctype html>
+const shell = ({ title, desc, path, body, jsonld = '' }) => { const m = path.match(/^planet\/(.+)\.html$/); const ogImage = SITE + (m && fs.existsSync(`img/og/${m[1]}.jpg`) ? `img/og/${m[1]}.jpg` : 'img/share.png'); return `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -35,7 +35,7 @@ const shell = ({ title, desc, path, body, jsonld = '' }) => `<!doctype html>
 <meta property="og:description" content="${esc(desc)}">
 <meta property="og:type" content="article">
 <meta property="og:url" content="${SITE}${path}">
-<meta property="og:image" content="${SITE}img/share.png">
+<meta property="og:image" content="${ogImage}">
 <meta name="twitter:card" content="summary_large_image">
 ${ICON}
 <link rel="stylesheet" href="css/style.css">
@@ -52,7 +52,7 @@ ${body}
 <script type="module" src="js/nav.js"></script>
 </body>
 </html>
-`;
+`; };
 
 // Short, specific descriptions make better search snippets than a generic line.
 function describe(p) {
@@ -125,7 +125,8 @@ fs.writeFileSync('planets.html', shell({ title: 'All exoplanets A to Z · Exopla
 // sitemap + robots
 const today = data.generated || new Date().toISOString().slice(0, 10);
 const top = ['', 'planets.html', ...ALL_PAGES.map(([f]) => f).filter((f) => f !== 'index.html')].filter((f) => f === '' || fs.existsSync(f));
-const urls = [...top.map((f) => SITE + f), ...[...seenSlugs].map((s) => `${SITE}planet/${s}.html`)];
+const hiTop = HI_FILES.filter((f) => fs.existsSync('hi/' + f));
+const urls = [...top.map((f) => SITE + f), ...hiTop.map((f) => SITE + 'hi/' + f), ...[...seenSlugs].map((s) => `${SITE}planet/${s}.html`)];
 fs.writeFileSync('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((u) => `<url><loc>${u}</loc><lastmod>${today}</lastmod></url>`).join('\n')}\n</urlset>\n`);
 fs.writeFileSync('robots.txt', `User-agent: *\nAllow: /\n\nSitemap: ${SITE}sitemap.xml\n`);
 console.log(`wrote ${seenSlugs.size} planet pages, planets.html, sitemap.xml (${urls.length} URLs), robots.txt`);

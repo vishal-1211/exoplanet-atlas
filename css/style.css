@@ -623,3 +623,12 @@ body.embed { background: #0D1530; margin: 0; }
 svg.sys-c .sy-lab { font-size: 14px; }
 svg.sys-c .sy-tick { font-size: 12.5px; }
 svg.sys-c .sy-hz { font-size: 13px; }
+
+.orbitcv { display: block; width: 100%; border-radius: 16px; border: 1px solid var(--hair); background: radial-gradient(60% 60% at 50% 50%, rgba(60, 80, 160, .18), rgba(10, 16, 40, .5)); }
+.h3 { margin: 22px 0 8px; font-size: 1.05rem; font-weight: 600; color: var(--ink); }
+.callout { margin: 0 0 20px; padding: 14px 18px; border-radius: 16px; border: 1px solid rgba(255, 180, 84, .35); background: rgba(255, 180, 84, .07); max-width: 80ch; }
+.thbtn { background: none; border: 0; padding: 0; color: inherit; font: inherit; cursor: pointer; text-align: left; white-space: nowrap; }
+.thbtn:hover { color: var(--ink); }
+.pager { display: flex; align-items: center; gap: 14px; margin: 14px 0; }
+.pager .btn[disabled] { opacity: .4; cursor: default; }
+.cd-table td, .cd-table th { white-space: nowrap; }

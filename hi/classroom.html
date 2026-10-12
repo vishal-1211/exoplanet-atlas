@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<base href="../">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Classroom kit: exoplanet activities · Exoplanet Atlas</title>
+<meta name="description" content="Printable exoplanet activities for the classroom, built from real data: a scale model, year lengths, weight on other worlds and reading a transit graph.">
+<link rel="canonical" href="https://exoplanet-atlas.macrocosm.workers.dev/hi/classroom.html">
+<link rel="alternate" hreflang="en" href="https://exoplanet-atlas.macrocosm.workers.dev/classroom.html">
+<link rel="alternate" hreflang="hi" href="https://exoplanet-atlas.macrocosm.workers.dev/hi/classroom.html">
+<link rel="alternate" hreflang="x-default" href="https://exoplanet-atlas.macrocosm.workers.dev/classroom.html">
+<meta property="og:url" content="https://exoplanet-atlas.macrocosm.workers.dev/hi/classroom.html">
+<meta property="og:image" content="https://exoplanet-atlas.macrocosm.workers.dev/img/share.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#070B1A">
+<meta name="color-scheme" content="dark">
+<meta property="og:title" content="Classroom kit: exoplanet activities · Exoplanet Atlas">
+<meta property="og:description" content="Printable exoplanet activities for the classroom, built from real data: a scale model, year lengths, weight on other worlds and reading a transit graph.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23070B1A'/%3E%3Ccircle cx='32' cy='32' r='14' fill='%23FFB454'/%3E%3Cellipse cx='32' cy='32' rx='26' ry='7' fill='none' stroke='%23EAF0FF' stroke-width='2.5' transform='rotate(-22 32 32)'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/style.css">
+
+</head>
+<body class="subpage classroom">
+<a class="skip" href="#main">Skip to content</a>
+<canvas id="sky" aria-hidden="true"></canvas>
+<div class="veil" aria-hidden="true"></div>
+
+<!--HEADER-->
+<header class="bar" id="bar">
+  <a class="brand" href="index.html" aria-label="Exoplanet Atlas home">
+    <svg width="26" height="26" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="13" fill="#FFB454"/><ellipse cx="32" cy="32" rx="28" ry="8" fill="none" stroke="#EAF0FF" stroke-width="3" transform="rotate(-22 32 32)"/></svg>
+    <span>Exoplanet Atlas</span>
+  </a>
+  <nav class="nav" id="nav" aria-label="Sections"><a href="index.html">Catalogue</a><a href="planets.html">All planets</a><a href="how.html">How planets are found</a></nav>
+  <a class="searchbtn" href="index.html#search" aria-label="Search planets">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <span>Search</span><kbd aria-hidden="true">/</kbd>
+  </a>
+</header>
+<!--/HEADER-->
+
+<main id="main">
+  <section class="wrap page-head">
+    <h1 class="h2 big-h" data-i="Classroom kit: exoplanet activities">कक्षा किट: बाह्यग्रह गतिविधियाँ</h1>
+    <p class="sec-lede" data-i="Five short activities that use real planets. Print this page (or save it as a PDF), hand it out, and use the answer key at the end. Numbers are computed from the catalogue.">Five short activities that use real planets. Print this page (or save it as a PDF), hand it out, and use the answer key at the end. Numbers are computed from the catalogue.</p>
+      <p class="noprint"><button type="button" class="btn primary" id="printBtn">Print this page</button></p>
+      <div id="clsOut"></div>
+  </section>
+  <section class="wrap more" aria-label="Keep exploring"><h2 class="h2" data-i="Keep exploring">और खोजें</h2><div class="more-grid"><a class="more-tile" href="index.html"><b data-i="Catalogue">सूची</b><span data-i="The full list of planets, with search and filters.">सभी ग्रहों की सूची, खोज और फ़िल्टर के साथ।</span></a><a class="more-tile" href="charts.html"><b data-i="Charts">चार्ट</b><span data-i="Plot size, mass, orbit and more for every planet.">हर ग्रह का आकार, द्रव्यमान, कक्षा और बहुत कुछ चार्ट पर देखें।</span></a><a class="more-tile" href="systems.html"><b data-i="Star systems">ग्रह-मंडल</b><span data-i="See the planets of one star side by side, drawn to scale.">एक तारे के सभी ग्रह साथ-साथ, पैमाने के अनुसार।</span></a><a class="more-tile" href="compare.html"><b data-i="Compare">तुलना</b><span data-i="Put two planets next to each other.">दो ग्रहों को आमने-सामने रखकर देखें।</span></a><a class="more-tile" href="tonight.html"><b data-i="Tonight">आज रात</b><span data-i="Which stars with planets are above you right now.">अभी आपके ऊपर ग्रहों वाले कौन-से तारे हैं।</span></a><a class="more-tile" href="candidates.html"><b data-i="Candidates">उम्मीदवार</b><span data-i="Signals from TESS and Kepler that are not yet confirmed as planets.">TESS और केप्लर के संकेत जिनकी अभी ग्रह के रूप में पुष्टि नहीं हुई।</span></a><a class="more-tile" href="seen.html"><b data-i="Seen and studied">देखे और परखे गए</b><span data-i="Planets that were photographed, and atmospheres that were measured.">जिन ग्रहों की तस्वीर ली गई और जिनके वायुमंडल मापे गए।</span></a><a class="more-tile" href="new.html"><b data-i="What's new">नया क्या है</b><span data-i="Planets added to the catalogue recently.">सूची में हाल ही में जुड़े ग्रह।</span></a><a class="more-tile" href="how.html"><b data-i="How planets are found">ग्रह कैसे खोजे जाते हैं</b><span data-i="The six methods astronomers use, with a diagram of each.">खगोलविदों के छह तरीके, हर एक का चित्र सहित।</span></a><a class="more-tile" href="next.html"><b data-i="What's next">आगे क्या है</b><span data-i="The missions and telescopes about to change the search.">वे मिशन और दूरबीनें जो खोज को बदलने वाली हैं।</span></a><a class="more-tile" href="telescopes.html"><b data-i="Telescopes">दूरबीनें</b><span data-i="The space telescopes and observatories behind the discoveries.">खोजों के पीछे की अंतरिक्ष दूरबीनें और वेधशालाएँ।</span></a><a class="more-tile" href="timeline.html"><b data-i="Timeline">समयरेखा</b><span data-i="How many planets were found each year, and by which method.">हर साल कितने ग्रह मिले, और किस तरीके से।</span></a><a class="more-tile" href="types.html"><b data-i="Planet types">ग्रहों के प्रकार</b><span data-i="From sub-Earths to super-Jupiters, and how many of each exist.">पृथ्वी से छोटे ग्रहों से लेकर विशाल गैस ग्रहों तक, और हर प्रकार की गिनती।</span></a><a class="more-tile" href="faq.html"><b data-i="Q&amp;A">प्रश्न-उत्तर</b><span data-i="Short answers to common questions.">आम सवालों के छोटे जवाब।</span></a><a class="more-tile" href="kids.html"><b data-i="Kids">बच्चों के लिए</b><span data-i="How big, how hot, how heavy would you be? Planets for young explorers.">वहाँ आप कितने भारी होंगे? छोटे खोजकर्ताओं के लिए ग्रह।</span></a><a class="more-tile" href="help.html"><b data-i="Help find planets">ग्रह खोजने में मदद करें</b><span data-i="Real projects where anyone can help discover and track exoplanets.">असली परियोजनाएँ जहाँ कोई भी बाह्यग्रह खोजने में मदद कर सकता है।</span></a><a class="more-tile" href="data.html"><b data-i="Data and sharing">डेटा और साझा करना</b><span data-i="Download the data, cite it, share a planet or embed one on your site.">डेटा डाउनलोड करें, हवाला दें, ग्रह साझा करें या अपनी साइट पर लगाएँ।</span></a></div></section>
+</main>
+
+<footer class="foot wrap">
+  <p class="credit">This research has made use of the NASA Exoplanet Archive, which is operated by the California Institute of Technology, under contract with the National Aeronautics and Space Administration under the Exoplanet Exploration Program. This is an independent project and is not affiliated with NASA.</p>
+</footer>
+
+<script type="module" src="js/classroom.js"></script>
+<noscript><p class="wrap">This page needs JavaScript to load the planet data.</p></noscript>
+</body>
+</html>

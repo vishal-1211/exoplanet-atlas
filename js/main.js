@@ -3,6 +3,8 @@ import { hydrate, TYPES, TEMPS, typeLabel, tempLabel, look, lookReason, fmt, tem
 import { t, lang, applyLang } from './i18n.js';
 import { SHELVES, shelvesHTML, orbBg, glow, heroTexts } from './shelves.js';
 import { systemSVG } from './system.js';
+import { aliasText } from './starnames.js';
+import { OrbitView } from './orbit.js';
 import { topFacts, details, HOW_FOUND, editorNote, fmtDuration, CURATED } from './facts.js';
 import { comparisonHTML } from './compare.js';
 import { Sky, prepare, drawMiniSky } from './sky.js';
@@ -43,7 +45,7 @@ async function load() {
 
 function prepareData() {
   for (const p of ALL) {
-    p.skey = p.search.replace(/[^a-z0-9]/g, '');
+    p.skey = (p.search + ' ' + aliasText(p).toLowerCase()).replace(/[^a-z0-9 ]/g, '').replace(/ /g, '');
     const known = [p.r, p.m, p.per, p.teq, p.dist_ly].filter((v) => v != null).length;
     p.score = (CURATED[p.name] || p.host === 'TRAPPIST-1' ? 100 : 0) + (p.hz ? 40 : 0)
       + (p.dist_ly != null && p.dist_ly < 50 ? 30 : 0) + known * 4 + (p.year >= 2024 ? 4 : 0)
@@ -364,6 +366,10 @@ function fillDetail(p) {
   $('#cmpLink').href = 'compare.html#' + new URLSearchParams({ a: p.name }).toString();
   stopHear();
   $('#hearBtn').parentElement.hidden = !showCurve;
+  $('#reportLink').href = 'https://github.com/vishal-1211/exoplanet-atlas/issues/new?' + new URLSearchParams({ title: 'Data problem: ' + p.name,
+    body: `Planet: ${p.name}\nPage: ${location.origin}/planet/${p.slug}.html\nData refreshed: ${META.generated}\n\nWhat looks wrong or missing:\n` });
+  $('#dAltWrap').hidden = true; $('#dAlt').innerHTML = ''; $('#dSpec').textContent = '';
+  renderExtras(p);
   $('#dDetails').innerHTML = details(p).map(([k, v]) => `<div><dt>${esc(k)}</dt><dd class="${v === NI ? 'ni' : ''}">${esc(v)}</dd></div>`).join('');
   $('#dArtist').textContent = lookReason(p);
 
@@ -394,6 +400,7 @@ async function openPlanet(p, push = true) {
     if (wasOpen) history.replaceState({ open: 1 }, '', url); else history.pushState({ open: 1 }, '', url);
   }
   if (!wasOpen) { detail.tabIndex = -1; detail.focus({ preventScroll: true }); }
+  requestAnimationFrame(() => showOrbit(p));
   document.title = `${p.name} · Exoplanet Atlas`;
   requestAnimationFrame(() => skyData && drawMiniSky($('#dSky'), skyData, { ra: p.ra, dec: p.dec }));
   try {
@@ -410,7 +417,7 @@ async function openPlanet(p, push = true) {
 
 function hideDetail() {
   if (detail.hidden) return;
-  stopHear();
+  stopHear(); if (orbit) orbit.stop();
   detail.hidden = true;
   document.body.classList.remove('lock', 'has-detail');
   document.title = 'Exoplanet Atlas';
@@ -454,6 +461,34 @@ $('#share').addEventListener('click', async () => {
   try { await navigator.clipboard.writeText(location.href); $('#shareMsg').textContent = 'Link copied.'; }
   catch { $('#shareMsg').textContent = 'Copy the address from your browser bar.'; }
 });
+
+// ---- orbit view, published values, spectra
+let orbit = null;
+function showOrbit(p) {
+  const sys = ALL.filter((q) => q.host === p.host && q.sma > 0 && q.per > 0);
+  $('#dOrbitWrap').hidden = !sys.length;
+  if (!sys.length) { if (orbit) orbit.stop(); return; }
+  orbit = orbit || new OrbitView($('#dOrbit'), { reduceMotion });
+  orbit.stop(); orbit.set(sys, p.name); orbit.start();
+}
+const extraCache = {};
+const loadExtra = (f) => (extraCache[f] ||= fetch('data/' + f).then((r) => (r.ok ? r.json() : null)).catch(() => null));
+async function renderExtras(p) {
+  const [alt, spec] = await Promise.all([loadExtra('alt-values.json'), loadExtra('spectra.json')]);
+  if ($('#dName').textContent !== p.name) return;
+  const rows = alt && alt.planets && alt.planets[p.name];
+  if (rows) {
+    const n = (v, d) => (v == null ? '<span class="ni">none</span>' : esc(fmt(v, d)));
+    $('#dAltWrap').hidden = false;
+    $('#dAlt').innerHTML = `<p class="small muted">Different studies have published different values for this planet. This site uses NASA's default set (marked).</p><div class="tablewrap"><table class="pl-table"><thead><tr><th>Paper</th><th>Radius (× Earth)</th><th>Mass (× Earth)</th><th>Year (days)</th></tr></thead><tbody>${rows.map(([ref, url, r, m, per, def, pub]) =>
+      `<tr><th scope="row">${url ? `<a href="${esc(url)}" rel="noopener" target="_blank">${esc(ref)}</a>` : esc(ref)}${def ? ' <small>default</small>' : ''}</th><td>${n(r, 2)}</td><td>${n(m, 2)}</td><td>${n(per, 3)}</td></tr>`).join('')}</tbody></table></div>`;
+  }
+  const sp = spec && spec.planets && spec.planets[p.name];
+  if (sp) {
+    const who = [...new Set(sp.map((s) => [s[1], s[2]].filter(Boolean).join(' ')).filter(Boolean))].slice(0, 4).join(', ');
+    $('#dSpec').innerHTML = `NASA lists ${sp.length} spectrum${sp.length > 1 ? ' ranges' : ''} for this planet${who ? ` (${esc(who)})` : ''}. <a href="${archiveUrl(p)}" rel="noopener" target="_blank">See them on the Archive</a>.`;
+  }
+}
 
 // ---- hear the transit
 let soundMod = null;

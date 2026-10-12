@@ -6,7 +6,7 @@ export const COLS = ['name', 'host', 'snum', 'pnum', 'method', 'year', 'facility
   'dist', 'ra', 'dec', 'controv'];
 
 // Optional columns. They are present only when the data file was built from a NASA download that included them.
-export const EXTRA_COLS = ['radeu', 'radel', 'masseu', 'massel', 'peru', 'perl', 'eqtu', 'eqtl', 'vmag', 'refurl', 'reftxt'];
+export const EXTRA_COLS = ['radeu', 'radel', 'masseu', 'massel', 'peru', 'perl', 'eqtu', 'eqtl', 'vmag', 'refurl', 'reftxt', 'hd', 'hip', 'tic', 'gaia', 'massprov'];
 
 export const RE_PER_RJ = 11.209;      // Jupiter radius in Earth radii
 export const ME_PER_MJ = 317.83;      // Jupiter mass in Earth masses
@@ -141,7 +141,8 @@ function derive(p) {
   // NASA's composite table fills a missing mass or radius using a standard mass-radius relation. A planet whose
   // two values sit exactly on that curve (about 4 in 5 of those with both) has only ONE real measurement, so its
   // density and gravity would just be the relation talking back. We leave those out.
-  p.mr_derived = p.rade != null && p.masse != null && Math.abs(p.rade / radiusFromMass(p.masse) - 1) < 0.006;
+  // When NASA says how the mass was obtained we use that; otherwise we look for the telltale exact fit.
+  p.mr_derived = p.rade != null && p.masse != null && (/relationship/i.test(p.massprov || '') || Math.abs(p.rade / radiusFromMass(p.masse) - 1) < 0.006);
   p.density = null; p.gravity = null;
   if (p.rade != null && p.masse != null && !p.mr_derived) {
     p.density = EARTH_DENSITY * p.masse / Math.pow(p.rade, 3);

@@ -1,3 +1,7 @@
 node_modules/
 .DS_Store
 *.log
+data/raw/toi.csv
+data/raw/koi.csv
+data/raw/ps.csv
+data/raw/spectra.csv

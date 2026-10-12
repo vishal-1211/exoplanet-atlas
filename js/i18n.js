@@ -47,11 +47,18 @@ const HI = {
   'Charts of every planet': 'हर ग्रह के चार्ट', 'Star systems, to scale': 'ग्रह-मंडल, पैमाने के साथ', 'Compare two planets': 'दो ग्रहों की तुलना',
   'What can I see tonight?': 'आज रात मैं क्या देख सकता हूँ?', 'Planets we have seen, and atmospheres we have studied': 'जो ग्रह देखे गए और जिनके वायुमंडल परखे गए',
   "What's new in the catalogue": 'सूची में नया क्या है', 'Data, citation and sharing': 'डेटा, हवाला और साझा करना', 'Classroom kit: exoplanet activities': 'कक्षा किट: बाह्यग्रह गतिविधियाँ',
+  'Candidates': 'उम्मीदवार', "What's next": 'आगे क्या है',
+  'Signals from TESS and Kepler that are not yet confirmed as planets.': 'TESS और केप्लर के संकेत जिनकी अभी ग्रह के रूप में पुष्टि नहीं हुई।',
+  'The missions and telescopes about to change the search.': 'वे मिशन और दूरबीनें जो खोज को बदलने वाली हैं।',
+  'Planet candidates: signals not yet confirmed': 'ग्रह उम्मीदवार: जिन संकेतों की पुष्टि बाकी है', 'What is coming next in the search for planets': 'ग्रहों की खोज में आगे क्या आ रहा है',
   'Hindi covers the menus, headings and main introductions. Facts about each planet stay in English.': 'हिंदी में मेनू, शीर्षक और मुख्य परिचय हैं। हर ग्रह के तथ्य अंग्रेज़ी में रहते हैं।',
 };
 
 let current = 'en';
-try { current = localStorage.getItem('lang') || ((navigator.language || '').toLowerCase().startsWith('hi') ? 'hi' : 'en'); } catch { /* storage blocked */ }
+try { if (document.documentElement.lang === 'hi') throw 0; current = localStorage.getItem('lang') || ((navigator.language || '').toLowerCase().startsWith('hi') ? 'hi' : 'en'); } catch { /* storage blocked, or this is a /hi/ page */ }
+if (typeof document !== 'undefined' && document.documentElement.lang === 'hi') current = 'hi';
+export const HINDI = HI;
+export const translate = (s) => HI[s] || s;
 export const lang = () => current;
 export const t = (s) => (current === 'hi' && HI[s]) || s;
 export function setLang(l) {

@@ -1,6 +1,7 @@
 // "What can I see tonight?": which stars with known planets are above the horizon, and where to look.
 import { boot, $, esc, nf } from './boot.js';
 import { enhanceSelect, refreshSelects } from './dropdown.js';
+import { pretty, PROPER } from './starnames.js';
 
 const { all } = await boot();
 
@@ -22,16 +23,6 @@ for (const p of all) {
 const hasMag = [...stars.values()].some((s) => s.vmag != null);
 for (const s of stars.values()) if (s.vmag == null && NAKED[s.host] != null) s.vmag = NAKED[s.host];
 const visibleList = [...stars.values()].filter((s) => s.vmag != null && s.vmag <= (hasMag ? 6.2 : 6.0));
-
-const GREEK = { alf: 'Alpha', bet: 'Beta', gam: 'Gamma', del: 'Delta', eps: 'Epsilon', zet: 'Zeta', eta: 'Eta', tet: 'Theta', iot: 'Iota', kap: 'Kappa', lam: 'Lambda', mu: 'Mu', nu: 'Nu', xi: 'Xi', omi: 'Omicron', pi: 'Pi', rho: 'Rho', sig: 'Sigma', tau: 'Tau', ups: 'Upsilon', phi: 'Phi', chi: 'Chi', psi: 'Psi', ome: 'Omega' };
-const GEN = { And: 'Andromedae', Ari: 'Arietis', Boo: 'Boötis', Cep: 'Cephei', Cet: 'Ceti', Cnc: 'Cancri', CrB: 'Coronae Borealis', Dra: 'Draconis', Eri: 'Eridani', Gem: 'Geminorum', Ind: 'Indi', Leo: 'Leonis', Lib: 'Librae', Oct: 'Octantis', Oph: 'Ophiuchi', Pic: 'Pictoris', Psc: 'Piscium', Ser: 'Serpentis', Tau: 'Tauri', UMa: 'Ursae Majoris', UMi: 'Ursae Minoris', Vir: 'Virginis', Aql: 'Aquilae', Com: 'Comae Berenices', Peg: 'Pegasi', Her: 'Herculis', Cas: 'Cassiopeiae', Lyr: 'Lyrae', Cyg: 'Cygni', Per: 'Persei', Ori: 'Orionis' };
-const PROPER = { 'alf Tau': 'Aldebaran', 'alf Ari': 'Hamal', 'bet UMi': 'Kochab', 'gam Cep': 'Errai', 'iot Dra': 'Edasich', 'bet Cnc': 'Tarf', 'eps Tau': 'Ain', 'bet Pic': 'Beta Pictoris', 'tau Cet': 'Tau Ceti', 'omi UMa': 'Muscida' };
-// NASA writes star names in catalogue shorthand ("alf Tau"); show the usual name.
-const pretty = (h) => {
-  const m = h.match(/^([a-z]{2,3})(\d)? ([A-Za-z]+)( [A-Z])?$/);
-  const full = m && GREEK[m[1]] && GEN[m[3]] ? `${GREEK[m[1]]}${m[2] ? '¹²³⁴'[m[2] - 1] || m[2] : ''} ${GEN[m[3]]}${m[4] || ''}` : h;
-  return PROPER[h] && PROPER[h] !== full ? `${PROPER[h]} (${full})` : full;
-};
 
 const st = { lat: 28.61, lon: 77.21, when: null };
 $('#tnControls').innerHTML = `<div class="fields"><label class="field">Place<select id="tnCity">${CITIES.map(([n], i) => `<option value="${i}">${n}</option>`).join('')}<option value="x">My own latitude and longitude</option></select></label>

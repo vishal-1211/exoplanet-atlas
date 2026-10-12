@@ -10,22 +10,7 @@ const output = new URL('../data/planets.json', import.meta.url).pathname;
 const changesPath = new URL('../data/changes.json', import.meta.url).pathname;
 const feedPath = new URL('../feed.xml', import.meta.url).pathname;
 
-// Minimal CSV parser that understands quoted fields.
-function parseCSV(text) {
-  const rows = []; let row = [], field = '', q = false;
-  for (let i = 0; i < text.length; i++) {
-    const ch = text[i];
-    if (q) {
-      if (ch === '"') { if (text[i + 1] === '"') { field += '"'; i++; } else q = false; }
-      else field += ch;
-    } else if (ch === '"') q = true;
-    else if (ch === ',') { row.push(field); field = ''; }
-    else if (ch === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
-    else if (ch !== '\r') field += ch;
-  }
-  if (field !== '' || row.length) { row.push(field); rows.push(row); }
-  return rows;
-}
+import { parseCSV } from './csv.mjs';
 
 const sig = (x, n = 5) => (x === 0 ? 0 : Number(x.toPrecision(n)));
 const text = readFileSync(input, 'utf8').replace(/^﻿/, '');
@@ -46,7 +31,9 @@ for (const [k, col] of Object.entries(want)) {
 }
 // Optional columns: used when the download has them and at least one value is filled in.
 const wantExtra = { radeu: 'pl_radeerr1', radel: 'pl_radeerr2', masseu: 'pl_bmasseerr1', massel: 'pl_bmasseerr2', peru: 'pl_orbpererr1', perl: 'pl_orbpererr2',
-  eqtu: 'pl_eqterr1', eqtl: 'pl_eqterr2', vmag: 'sy_vmag', refurl: 'pl_refname', reftxt: 'pl_refname' };
+  eqtu: 'pl_eqterr1', eqtl: 'pl_eqterr2', vmag: 'sy_vmag', refurl: 'pl_refname', reftxt: 'pl_refname',
+  hd: 'hd_name', hip: 'hip_name', tic: 'tic_id', gaia: 'gaia_dr3_id', massprov: 'pl_bmassprov' };
+const TEXT_EXTRA = new Set(['hd', 'hip', 'tic', 'gaia', 'massprov']);
 const extraIdx = {};
 for (const k of EXTRA_COLS) { const i = header.indexOf(wantExtra[k]); if (i >= 0) extraIdx[k] = i; }
 // pl_refname looks like: <a refstr=... href=https://... target=ref>Author et al. 2020</a>
@@ -81,6 +68,7 @@ for (const r of table) {
     const raw = (r[extraIdx[k]] ?? '').trim();
     if (k === 'refurl') out.push(raw ? parseRef(raw).href : null);
     else if (k === 'reftxt') out.push(raw ? parseRef(raw).txt : null);
+    else if (TEXT_EXTRA.has(k)) out.push(raw || null);
     else { const n = raw === '' ? NaN : Number(raw); out.push(Number.isFinite(n) ? sig(n, 4) : null); }
   }
   rows.push(out);
@@ -128,6 +116,11 @@ if (prev && prev.generated !== data.generated || (prev && prev.count !== data.co
   }
 }
 changes.updated = data.generated;
+// Nothing changed since the last build? Then leave every file alone, so the date only moves when the data does.
+if (prev && JSON.stringify(prev.rows) === JSON.stringify(rows) && JSON.stringify(prev.cols) === JSON.stringify(data.cols)) {
+  console.log('No change in the planet data. Files left as they are.');
+  process.exit(0);
+}
 writeFileSync(changesPath, JSON.stringify(changes));
 const x = (t) => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 const entries = changes.log.slice(0, 20).map((e) => {

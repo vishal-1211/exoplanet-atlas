@@ -153,7 +153,17 @@ cv.addEventListener('click', (e) => {
   else location.href = planetHref(q.p);
 });
 
-function refresh() { compute(); syncSel(); draw(); }
+// text alternative to the chart, for screen readers and keyboard users
+$('#cxNote').insertAdjacentHTML('afterend', '<details class="cx-table"><summary>Show the plotted planets as a table</summary><div id="cxTableBody"></div></details>');
+let tableRows = 100;
+function fillTable() {
+  const d = $('.cx-table'); if (!d.open) return;
+  const ax = AX[st.x], ay = AX[st.y], list = [...pts].sort((p, q) => q.a - p.a).slice(0, tableRows);
+  $('#cxTableBody').innerHTML = `<div class="tablewrap"><table class="pl-table"><thead><tr><th>Planet</th><th>${ax.label}</th><th>${ay.label}</th></tr></thead><tbody>${list.map((q) => `<tr><th scope="row"><a href="${planetHref(q.p)}">${esc(q.p.name)}</a></th><td>${fmt(q.a, 3)}</td><td>${fmt(q.b, 3)}</td></tr>`).join('')}</tbody></table></div>${pts.length > tableRows ? `<p><button type="button" class="btn" id="cxMore">Show 100 more (${nf(pts.length - tableRows)} left)</button></p>` : ''}`;
+}
+$('.cx-table').addEventListener('toggle', fillTable);
+$('#cxTableBody').addEventListener('click', (e) => { if (e.target.id === 'cxMore') { tableRows += 100; fillTable(); } });
+function refresh() { compute(); syncSel(); draw(); tableRows = 100; fillTable(); }
 ctl.addEventListener('click', (e) => {
   const pre = e.target.closest('[data-pre]');
   if (pre) { const p = PRESETS.find((q) => q.id === pre.dataset.pre); Object.assign(st, { x: p.x, y: p.y, sol: p.sol }); st.hide.clear(); refresh(); }

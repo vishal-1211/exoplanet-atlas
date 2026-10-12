@@ -1,39 +1,91 @@
 name: Refresh planet data
 
-# Runs every Monday and can also be started by hand (Actions tab > Refresh planet data > Run workflow).
-# If NASA is unreachable, this job fails and nothing is changed: the site keeps its last good data.
+# Keeps the whole site current without anyone touching it. Every day this job:
+#   1. downloads the confirmed-planet table (and the optional candidate / published-value / spectra tables),
+#   2. rebuilds every page that shows a number: home page, planet pages, A-Z list, sitemap, feed, API files,
+#   3. draws preview pictures for newly notable planets,
+#   4. tests the result (data checks, broken links, a real-browser smoke test),
+#   5. commits and pushes only if NASA's data actually changed. Cloudflare then redeploys by itself.
+# If NASA is unreachable or a test fails, nothing is pushed (the site keeps its last good version) and a
+# GitHub issue is opened so you get an email. You can also run it by hand: Actions > Refresh planet data > Run workflow.
 on:
   schedule:
-    - cron: '17 3 * * 1'
+    - cron: '17 3 * * *'
   workflow_dispatch:
 
 permissions:
   contents: write
+  issues: write
+
+concurrency:
+  group: refresh-data
+  cancel-in-progress: false
 
 jobs:
   refresh:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Download from NASA Exoplanet Archive
+
+      - name: Download confirmed planets from NASA
         run: node scripts/fetch-nasa.mjs
-      - name: Convert to the website's data file
-        run: node scripts/build-data.mjs
-      - name: Update the home page and the feed
-        run: node scripts/build-home.mjs
-      - name: Check the result
-        run: node scripts/test.mjs
-      - name: Commit if anything changed
+
+      - name: Download candidates, published values and spectra list (optional)
+        # These extra tables are optional: if one fails, the site keeps its previous copy.
+        continue-on-error: true
+        run: node scripts/fetch-extra.mjs
+
+      - name: Build the data files
+        run: |
+          node scripts/build-data.mjs
+          node scripts/build-extra.mjs
+          node scripts/build-api.mjs
+
+      - name: Set up a browser for pictures and tests
+        run: |
+          pip install playwright
+          playwright install --with-deps chromium
+
+      - name: Rebuild the pages
+        run: |
+          node scripts/build-pages.mjs
+          node scripts/build-home.mjs
+          python3 scripts/build-og.py
+          node scripts/build-planets.mjs
+
+      - name: Test the result
+        run: |
+          node scripts/test.mjs
+          node scripts/check-links.mjs
+          python3 scripts/smoke.py
+
+      - name: Commit and push if anything changed
         run: |
           git config user.name "exoplanet-atlas bot"
           git config user.email "actions@users.noreply.github.com"
-          git add data/planets.json data/changes.json data/raw/planets.csv feed.xml index.html
+          git add -A data api feed.xml index.html hi planet planets.html sitemap.xml img/og *.html
           if git diff --cached --quiet; then
-            echo "No changes in NASA's data this week."
+            echo "Nothing changed in NASA's data today."
           else
-            git commit -m "Refresh planet data from NASA Exoplanet Archive"
+            git commit -m "Daily refresh from NASA Exoplanet Archive"
             git push
+          fi
+
+      - name: Open an issue if the refresh failed
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          existing=$(gh issue list --label refresh-failed --state open --json number --jq '.[0].number')
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body "Failed again: $url"
+          else
+            gh label create refresh-failed --color B60205 --description "Daily data refresh failed" 2>/dev/null || true
+            gh issue create --label refresh-failed --title "Daily data refresh failed" \
+              --body "The automatic refresh did not finish, so the site is still showing the last good data. Details: $url"
           fi
