@@ -3,7 +3,6 @@ import { topFacts, details, HOW_FOUND, editorNote, fmtDuration, CURATED } from '
 import { comparisonHTML } from './compare.js';
 import { Sky, prepare, drawMiniSky } from './sky.js';
 import { heroCurve, transitCurve } from './charts.js';
-import { buildLearn } from './learn.js';
 import { enhanceSelect, refreshSelects } from './dropdown.js';
 
 const $ = (s) => document.querySelector(s);
@@ -32,7 +31,6 @@ async function load() {
   startSky();
   buildHero();
   buildShelves();
-  buildLearn(ALL, { openPlanet, browseType });
   buildControls();
   applyFilters();
   window.addEventListener('popstate', routeFromHash);
@@ -464,6 +462,9 @@ function closeDetail() {
 }
 
 function routeFromHash() {
+  if (location.hash === '#search') { history.replaceState(null, '', location.pathname + location.search); requestAnimationFrame(focusSearch); return; }
+  const t = location.hash.match(/^#type=(\w+)$/);
+  if (t) { history.replaceState(null, '', location.pathname + location.search); browseType(t[1]); return; }
   const m = location.hash.match(/^#planet=(.+)$/);
   if (m) {
     const name = decodeURIComponent(m[1]);

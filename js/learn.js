@@ -195,52 +195,60 @@ const FAQ = [
 export function buildLearn(all, { openPlanet, browseType }) {
   const $ = (s) => document.querySelector(s);
 
-  $('#methods').innerHTML = methodCards(all);
-  $('#methods').addEventListener('click', (e) => {
-    const b = e.target.closest('.m-ex');
-    if (b) openPlanet(all[+b.dataset.id]);
-  });
+  if ($('#methods')) {
+    $('#methods').innerHTML = methodCards(all);
+    $('#methods').addEventListener('click', (e) => {
+      const b = e.target.closest('.m-ex');
+      if (b) openPlanet(all[+b.dataset.id]);
+    });
+  }
 
-  const tl = timeline(all);
-  $('#tlLede').textContent = tl.lede;
-  $('#tlChart').innerHTML = tl.svg + `<ul class="marks">${tl.marks}</ul>`;
-  $('#tlLegend').innerHTML = tl.legend;
+  if ($('#tlChart')) {
+    const tl = timeline(all);
+    $('#tlLede').textContent = tl.lede;
+    $('#tlChart').innerHTML = tl.svg + `<ul class="marks">${tl.marks}</ul>`;
+    $('#tlLegend').innerHTML = tl.legend;
+  }
 
-  const sc = scopes(all);
-  const sp = (100 * sc.space) / sc.sum, gp = 100 - sp;
-  $('#scLede').textContent = `${nf(sc.count)} different telescopes, observatories and surveys are credited with at least one discovery. A handful of space telescopes account for most of the planets, while ground-based observatories lead on the nearby, well-studied ones.`;
-  $('#scSplit').innerHTML = `<div class="split-bar" role="img" aria-label="${fmt(sp, 0)} percent found from space, ${fmt(gp, 0)} percent from the ground"><i class="sp" style="width:${sp}%"></i><i class="gr" style="width:${gp}%"></i></div>
-    <div class="split-key"><span><i class="sp"></i><b>${nf(sc.space)}</b> found by space telescopes (${fmt(sp, 0)}%)</span><span><i class="gr"></i><b>${nf(sc.ground)}</b> found from the ground (${fmt(gp, 0)}%)</span></div>`;
-  const maxN = sc.top[0].n;
-  $('#scopes-list').innerHTML = sc.top.map((o) => {
-    const ms = [...o.meth].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k]) => k).join(', ');
-    const note = SCOPE_NOTES[o.name];
-    return `<li class="scope">
-      <div class="s-head"><b>${esc(o.name)}</b><span class="tag ${o.loc === 'Space' ? 'tag-space' : 'tag-ground'}">${o.loc === 'Space' ? 'Space' : 'Ground'}</span></div>
-      <div class="s-bar" aria-hidden="true"><i style="width:${Math.max(1.5, (100 * o.n) / maxN)}%"></i></div>
-      <p class="s-num"><b>${nf(o.n)}</b> planets, ${o.y0}${o.y1 !== o.y0 ? ' to ' + o.y1 : ''}</p>
-      ${note ? `<p class="s-note">${esc(note)}</p>` : ''}
-      <p class="s-meth">${esc(ms)}</p>
-    </li>`;
-  }).join('');
-  $('#scNote').textContent = `Another ${nf(sc.multiN)} planets are credited to several observatories working together, and are not listed above. Discovery credit goes to the facility named in NASA's records, not necessarily every telescope used to confirm the planet.`;
+  if ($('#scopes-list')) {
+    const sc = scopes(all);
+    const sp = (100 * sc.space) / sc.sum, gp = 100 - sp;
+    $('#scLede').textContent = `${nf(sc.count)} different telescopes, observatories and surveys are credited with at least one discovery. A handful of space telescopes account for most of the planets, while ground-based observatories lead on the nearby, well-studied ones.`;
+    $('#scSplit').innerHTML = `<div class="split-bar" role="img" aria-label="${fmt(sp, 0)} percent found from space, ${fmt(gp, 0)} percent from the ground"><i class="sp" style="width:${sp}%"></i><i class="gr" style="width:${gp}%"></i></div>
+      <div class="split-key"><span><i class="sp"></i><b>${nf(sc.space)}</b> found by space telescopes (${fmt(sp, 0)}%)</span><span><i class="gr"></i><b>${nf(sc.ground)}</b> found from the ground (${fmt(gp, 0)}%)</span></div>`;
+    const maxN = sc.top[0].n;
+    $('#scopes-list').innerHTML = sc.top.map((o) => {
+      const ms = [...o.meth].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k]) => k).join(', ');
+      const note = SCOPE_NOTES[o.name];
+      return `<li class="scope">
+        <div class="s-head"><b>${esc(o.name)}</b><span class="tag ${o.loc === 'Space' ? 'tag-space' : 'tag-ground'}">${o.loc === 'Space' ? 'Space' : 'Ground'}</span></div>
+        <div class="s-bar" aria-hidden="true"><i style="width:${Math.max(1.5, (100 * o.n) / maxN)}%"></i></div>
+        <p class="s-num"><b>${nf(o.n)}</b> planets, ${o.y0}${o.y1 !== o.y0 ? ' to ' + o.y1 : ''}</p>
+        ${note ? `<p class="s-note">${esc(note)}</p>` : ''}
+        <p class="s-meth">${esc(ms)}</p>
+      </li>`;
+    }).join('');
+    $('#scNote').textContent = `Another ${nf(sc.multiN)} planets are credited to several observatories working together, and are not listed above. Discovery credit goes to the facility named in NASA's records, not necessarily every telescope used to confirm the planet.`;
+  }
 
-  const counts = {};
-  for (const p of all) counts[p.type] = (counts[p.type] || 0) + 1;
-  const SIZE = { subearth: 'Under 0.8× Earth\'s width', earth: '0.8 to 1.25×', superearth: '1.25 to 2×', mininep: '2 to 3.5×', neptune: '3.5 to 6×', giant: 'Over 6×', superjup: 'Over 13 Jupiter masses', unknown: 'Not measured' };
-  const COL = { subearth: '#A8A59E', earth: '#5AA0E0', superearth: '#6CC08B', mininep: '#8FB8E8', neptune: '#4F7BFF', giant: '#E0B070', superjup: '#D0805A', unknown: '#6B7699' };
-  const DIA = { subearth: 14, earth: 18, superearth: 26, mininep: 34, neptune: 44, giant: 62, superjup: 72, unknown: 20 };
-  $('#zoo').innerHTML = TYPES.map((t) => `<button type="button" class="kind" data-type="${t.id}">
-      <span class="k-orb" style="--d:${DIA[t.id]}px;--c:${COL[t.id]}"><i></i></span>
-      <b>${esc(t.label)}</b>
-      <small>${esc(t.blurb)}</small>
-      <span class="k-size">${esc(SIZE[t.id])}</span>
-      <span class="k-n">${nf(counts[t.id] || 0)} planets</span>
-    </button>`).join('');
-  $('#zoo').addEventListener('click', (e) => {
-    const b = e.target.closest('.kind');
-    if (b) browseType(b.dataset.type);
-  });
+  if ($('#zoo')) {
+    const counts = {};
+    for (const p of all) counts[p.type] = (counts[p.type] || 0) + 1;
+    const SIZE = { subearth: 'Under 0.8× Earth\'s width', earth: '0.8 to 1.25×', superearth: '1.25 to 2×', mininep: '2 to 3.5×', neptune: '3.5 to 6×', giant: 'Over 6×', superjup: 'Over 13 Jupiter masses', unknown: 'Not measured' };
+    const COL = { subearth: '#A8A59E', earth: '#5AA0E0', superearth: '#6CC08B', mininep: '#8FB8E8', neptune: '#4F7BFF', giant: '#E0B070', superjup: '#D0805A', unknown: '#6B7699' };
+    const DIA = { subearth: 14, earth: 18, superearth: 26, mininep: 34, neptune: 44, giant: 62, superjup: 72, unknown: 20 };
+    $('#zoo').innerHTML = TYPES.map((t) => `<button type="button" class="kind" data-type="${t.id}">
+        <span class="k-orb" style="--d:${DIA[t.id]}px;--c:${COL[t.id]}"><i></i></span>
+        <b>${esc(t.label)}</b>
+        <small>${esc(t.blurb)}</small>
+        <span class="k-size">${esc(SIZE[t.id])}</span>
+        <span class="k-n">${nf(counts[t.id] || 0)} planets</span>
+      </button>`).join('');
+    $('#zoo').addEventListener('click', (e) => {
+      const b = e.target.closest('.kind');
+      if (b) browseType(b.dataset.type);
+    });
+  }
 
-  $('#faqList').innerHTML = FAQ.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join('');
+  if ($('#faqList')) $('#faqList').innerHTML = FAQ.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join('');
 }

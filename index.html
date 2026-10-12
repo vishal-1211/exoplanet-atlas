@@ -18,19 +18,19 @@
 <canvas id="sky" aria-hidden="true"></canvas>
 <div class="veil" aria-hidden="true"></div>
 
+<!--HEADER-->
 <header class="bar" id="bar">
-  <a class="brand" href="./" aria-label="Exoplanet Atlas home">
+  <a class="brand" href="index.html" aria-label="Exoplanet Atlas home">
     <svg width="26" height="26" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="13" fill="#FFB454"/><ellipse cx="32" cy="32" rx="28" ry="8" fill="none" stroke="#EAF0FF" stroke-width="3" transform="rotate(-22 32 32)"/></svg>
     <span>Exoplanet Atlas</span>
   </a>
-  <nav class="nav" aria-label="Sections">
-    <a href="#explorer">Catalogue</a><a href="#how">How planets are found</a><a href="#timeline">Timeline</a><a href="#scopes">Telescopes</a><a href="#faq">Q&amp;A</a>
-  </nav>
+  <nav class="nav" aria-label="Sections"><a href="index.html" aria-current="page">Catalogue</a><a href="how.html">How planets are found</a><a href="telescopes.html">Telescopes</a><a href="timeline.html">Timeline</a><a href="types.html">Planet types</a><a href="faq.html">Q&amp;A</a></nav>
   <button type="button" class="searchbtn" id="goSearch" aria-label="Search planets">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
     <span>Search</span><kbd aria-hidden="true">/</kbd>
   </button>
 </header>
+<!--/HEADER-->
 
 <main>
   <section class="hero wrap">
@@ -85,34 +85,16 @@
     </section>
   </div>
 
-  <div id="learn">
-    <section id="how" class="wrap sec" aria-labelledby="howH">
-      <h2 class="h2 big-h" id="howH">How planets are found</h2>
-      <p class="sec-lede">A planet around another star is almost always too faint to see directly. Astronomers look for what it does to its star instead. Six methods have found nearly every planet in this catalogue.</p>
-      <div class="methods" id="methods"></div>
-    </section>
-    <section id="timeline" class="wrap sec" aria-labelledby="tlH">
-      <h2 class="h2 big-h" id="tlH">Discoveries through time</h2>
-      <p class="sec-lede" id="tlLede"></p>
-      <figure class="chartbox"><div id="tlChart"></div><div class="legend" id="tlLegend"></div></figure>
-    </section>
-    <section id="scopes" class="wrap sec" aria-labelledby="scH">
-      <h2 class="h2 big-h" id="scH">The telescopes behind the discoveries</h2>
-      <p class="sec-lede" id="scLede"></p>
-      <div class="split" id="scSplit"></div>
-      <ol class="scopes" id="scopes-list"></ol>
-      <p class="small muted" id="scNote"></p>
-    </section>
-    <section id="types" class="wrap sec" aria-labelledby="tyH">
-      <h2 class="h2 big-h" id="tyH">The kinds of planets out there</h2>
-      <p class="sec-lede">Size is the first thing astronomers sort planets by. Click a kind to browse it in the catalogue.</p>
-      <div class="zoo" id="zoo"></div>
-    </section>
-    <section id="faq" class="wrap sec" aria-labelledby="faqH">
-      <h2 class="h2 big-h" id="faqH">Questions people ask</h2>
-      <div class="faq" id="faqList"></div>
-    </section>
-  </div>
+  <section class="wrap more" id="learnMore" aria-label="Learn more">
+    <h2 class="h2">Learn more about exoplanets</h2>
+    <div class="more-grid">
+      <a class="more-tile" href="how.html"><b>How planets are found</b><span>The six methods astronomers use, with a diagram of each.</span></a>
+      <a class="more-tile" href="telescopes.html"><b>Telescopes</b><span>The space telescopes and observatories behind the discoveries.</span></a>
+      <a class="more-tile" href="timeline.html"><b>Timeline</b><span>How many planets were found each year, and by which method.</span></a>
+      <a class="more-tile" href="types.html"><b>Planet types</b><span>From sub-Earths to super-Jupiters, and how many of each exist.</span></a>
+      <a class="more-tile" href="faq.html"><b>Q&amp;A</b><span>Short answers to common questions.</span></a>
+    </div>
+  </section>
 </main>
 
 <footer class="foot wrap">
