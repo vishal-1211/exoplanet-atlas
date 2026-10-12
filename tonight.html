@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>What can I see tonight? · Exoplanet Atlas</title>
+<meta name="description" content="Which stars that have known planets are above your horizon right now, and where to look. Uses your location or a city you choose.">
+<link rel="canonical" href="https://exoplanet-atlas.macrocosm.workers.dev/tonight.html">
+<meta property="og:url" content="https://exoplanet-atlas.macrocosm.workers.dev/tonight.html">
+<meta property="og:image" content="https://exoplanet-atlas.macrocosm.workers.dev/img/share.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#070B1A">
+<meta name="color-scheme" content="dark">
+<meta property="og:title" content="What can I see tonight? · Exoplanet Atlas">
+<meta property="og:description" content="Which stars that have known planets are above your horizon right now, and where to look. Uses your location or a city you choose.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23070B1A'/%3E%3Ccircle cx='32' cy='32' r='14' fill='%23FFB454'/%3E%3Cellipse cx='32' cy='32' rx='26' ry='7' fill='none' stroke='%23EAF0FF' stroke-width='2.5' transform='rotate(-22 32 32)'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/style.css">
+
+</head>
+<body class="subpage ">
+<a class="skip" href="#main">Skip to content</a>
+<canvas id="sky" aria-hidden="true"></canvas>
+<div class="veil" aria-hidden="true"></div>
+
+<!--HEADER-->
+<header class="bar" id="bar">
+  <a class="brand" href="index.html" aria-label="Exoplanet Atlas home">
+    <svg width="26" height="26" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="13" fill="#FFB454"/><ellipse cx="32" cy="32" rx="28" ry="8" fill="none" stroke="#EAF0FF" stroke-width="3" transform="rotate(-22 32 32)"/></svg>
+    <span>Exoplanet Atlas</span>
+  </a>
+  <nav class="nav" id="nav" aria-label="Sections"><a href="index.html">Catalogue</a><a href="planets.html">All planets</a><a href="how.html">How planets are found</a></nav>
+  <a class="searchbtn" href="index.html#search" aria-label="Search planets">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <span>Search</span><kbd aria-hidden="true">/</kbd>
+  </a>
+</header>
+<!--/HEADER-->
+
+<main id="main">
+  <section class="wrap page-head">
+    <h1 class="h2 big-h" data-i>What can I see tonight?</h1>
+    <p class="sec-lede" data-i>You cannot see the planets themselves, but some of their stars are bright enough to see without a telescope. Choose where you are and when.</p>
+      <div class="tn-controls" id="tnControls"></div>
+      <div class="tn-grid"><canvas id="tnSky" class="tn-sky" role="img" aria-label="Map of the sky above you"></canvas><div id="tnList"></div></div>
+      <p class="small muted" id="tnNote"></p>
+  </section>
+  <section class="wrap more" aria-label="Keep exploring"><h2 class="h2" data-i>Keep exploring</h2><div class="more-grid"><a class="more-tile" href="index.html"><b data-i>Catalogue</b><span data-i>The full list of planets, with search and filters.</span></a><a class="more-tile" href="charts.html"><b data-i>Charts</b><span data-i>Plot size, mass, orbit and more for every planet.</span></a><a class="more-tile" href="systems.html"><b data-i>Star systems</b><span data-i>See the planets of one star side by side, drawn to scale.</span></a><a class="more-tile" href="compare.html"><b data-i>Compare</b><span data-i>Put two planets next to each other.</span></a><a class="more-tile" href="seen.html"><b data-i>Seen and studied</b><span data-i>Planets that were photographed, and atmospheres that were measured.</span></a><a class="more-tile" href="new.html"><b data-i>What's new</b><span data-i>Planets added to the catalogue recently.</span></a><a class="more-tile" href="how.html"><b data-i>How planets are found</b><span data-i>The six methods astronomers use, with a diagram of each.</span></a><a class="more-tile" href="telescopes.html"><b data-i>Telescopes</b><span data-i>The space telescopes and observatories behind the discoveries.</span></a><a class="more-tile" href="timeline.html"><b data-i>Timeline</b><span data-i>How many planets were found each year, and by which method.</span></a><a class="more-tile" href="types.html"><b data-i>Planet types</b><span data-i>From sub-Earths to super-Jupiters, and how many of each exist.</span></a><a class="more-tile" href="faq.html"><b data-i>Q&amp;A</b><span data-i>Short answers to common questions.</span></a><a class="more-tile" href="kids.html"><b data-i>Kids</b><span data-i>How big, how hot, how heavy would you be? Planets for young explorers.</span></a><a class="more-tile" href="classroom.html"><b data-i>Classroom kit</b><span data-i>Printable activities for teachers, built from real planet data.</span></a><a class="more-tile" href="help.html"><b data-i>Help find planets</b><span data-i>Real projects where anyone can help discover and track exoplanets.</span></a><a class="more-tile" href="data.html"><b data-i>Data and sharing</b><span data-i>Download the data, cite it, share a planet or embed one on your site.</span></a></div></section>
+</main>
+
+<footer class="foot wrap">
+  <p class="credit">This research has made use of the NASA Exoplanet Archive, which is operated by the California Institute of Technology, under contract with the National Aeronautics and Space Administration under the Exoplanet Exploration Program. This is an independent project and is not affiliated with NASA.</p>
+</footer>
+
+<script type="module" src="js/tonight.js"></script>
+<noscript><p class="wrap">This page needs JavaScript to load the planet data.</p></noscript>
+</body>
+</html>

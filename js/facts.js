@@ -1,6 +1,6 @@
 // Generates the "details" table and the "interesting facts" for a planet purely from its data.
 // A small set of hand-written editor's notes covers famous planets.
-import { fmt, rankOf, ordinal, typeLabel, tempLabel, look, transitDepth, RE_PER_RJ, ME_PER_MJ } from './model.js';
+import { plusMinus, fmt, rankOf, ordinal, typeLabel, tempLabel, look, transitDepth, RE_PER_RJ, ME_PER_MJ } from './model.js';
 
 const NI = 'Not identified';
 
@@ -73,6 +73,7 @@ const kelvinC = (k) => `${fmt(k, 0)} K (${fmt(k - 273.15, 0)} °C)`;
 const times = (x, unit) => `${fmt(x, 2)}× ${unit}`;
 
 // ---------- the details table ----------
+const unc = (u, l, d = 2, unit = '') => { const t = plusMinus(u, l, d); return t ? `, uncertainty ${t}${unit}` : ''; };
 export function details(p) {
   const radiusNote = p.r_est ? ' (estimated from mass)' : '';
   const rows = [
@@ -81,19 +82,20 @@ export function details(p) {
     ['Discovery method', p.method],
     ['Discovered with', p.facility ? p.facility + (p.locale === 'Space' ? ' (space-based)' : p.locale === 'Ground' ? ' (ground-based)' : '') : NI],
     ['Distance from Earth', p.dist_ly != null ? `${fmt(p.dist_ly, 1)} light-years` : NI],
-    ['Radius', p.r != null ? `${times(p.r, "Earth")} · ${times(p.r / RE_PER_RJ, 'Jupiter')}${radiusNote}` : NI],
-    ['Mass', p.m != null ? `${times(p.m, 'Earth')} · ${times(p.m / ME_PER_MJ, 'Jupiter')}` : NI],
+    ['Radius', p.r != null ? `${times(p.r, "Earth")} · ${times(p.r / RE_PER_RJ, 'Jupiter')}${radiusNote}${p.r_est ? '' : unc(p.radeu, p.radel, 2, '× Earth')}` : NI],
+    ['Mass', p.m != null ? `${times(p.m, 'Earth')} · ${times(p.m / ME_PER_MJ, 'Jupiter')}${unc(p.masseu, p.massel, 2, '× Earth')}` : NI],
     ['Density', p.density != null ? `${fmt(p.density, 2)} g/cm³ (Earth: 5.51)` : NI],
     ['Length of a year', p.per != null ? fmtDuration(p.per) + (p.per_est ? ' (estimated)' : '') : NI],
     ['Distance from its star', p.sma != null ? `${fmt(p.sma, 3)} AU (Earth: 1)${p.sma_est ? ' (estimated)' : ''}` : NI],
     ['Orbit shape (eccentricity)', p.ecc != null ? fmt(p.ecc, 2) + ' (0 = circle)' : NI],
-    ['Temperature', p.teq != null ? kelvinC(p.teq) + (p.teq_est ? ', estimated' : ', equilibrium') : NI],
+    ['Temperature', p.teq != null ? kelvinC(p.teq) + (p.teq_est ? ', estimated' : ', equilibrium' + unc(p.eqtu, p.eqtl, 0, ' K')) : NI],
     ['Starlight received', p.S != null ? `${times(p.S, 'what Earth gets')}${p.S_est ? ' (estimated)' : ''}` : NI],
     ['Host star', p.host + (p.star ? `, ${p.star.name} star` : '')],
     ['Star temperature', p.teff != null ? `${fmt(p.teff, 0)} K` : NI],
     ['Planets known in this system', p.pnum != null ? String(p.pnum) : NI],
     ['Sky position (RA, Dec)', `${fmt(p.ra, 3)}°, ${fmt(p.dec, 3)}°`],
   ];
+  if (p.reftxt) rows.push(['Numbers come from', p.reftxt + ' (the NASA Exoplanet Archive default source)']);
   return rows;
 }
 

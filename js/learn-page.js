@@ -1,5 +1,6 @@
 // Shared script for the learn pages (how, telescopes, timeline, types, faq):
 // loads the catalogue data, draws the sky background, and fills in the page.
+import './nav.js';
 import { hydrate } from './model.js';
 import { Sky } from './sky.js';
 import { buildLearn } from './learn.js';
@@ -11,10 +12,6 @@ window.addEventListener('scroll', () => $('#bar').classList.toggle('scrolled', w
 document.addEventListener('keydown', (e) => {
   if (e.key === '/' && !['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement.tagName)) { e.preventDefault(); go('#search'); }
 });
-
-// On phones the section links scroll sideways; bring the current page's link into view.
-const cur = document.querySelector('.nav [aria-current]');
-if (cur && cur.parentElement.scrollWidth > cur.parentElement.clientWidth) cur.parentElement.scrollLeft = cur.offsetLeft - 24;
 
 (async () => {
   let all;

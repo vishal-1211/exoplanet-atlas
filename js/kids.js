@@ -1,5 +1,6 @@
 // Kids page: pick a planet and find out how big, how heavy, how old, how hot and how far,
 // plus "Spot the planet" (find the star whose light dips) and a short quiz. Nothing is stored or sent.
+import './nav.js';
 import { hydrate } from './model.js';
 import { Sky } from './sky.js';
 

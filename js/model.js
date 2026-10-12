@@ -5,6 +5,9 @@ export const COLS = ['name', 'host', 'snum', 'pnum', 'method', 'year', 'facility
   'per', 'sma', 'ecc', 'rade', 'masse', 'insol', 'eqt', 'spec', 'teff', 'srad', 'smass',
   'dist', 'ra', 'dec', 'controv'];
 
+// Optional columns. They are present only when the data file was built from a NASA download that included them.
+export const EXTRA_COLS = ['radeu', 'radel', 'masseu', 'massel', 'peru', 'perl', 'eqtu', 'eqtl', 'vmag', 'refurl', 'reftxt'];
+
 export const RE_PER_RJ = 11.209;      // Jupiter radius in Earth radii
 export const ME_PER_MJ = 317.83;      // Jupiter mass in Earth masses
 export const LY_PER_PC = 3.26156;
@@ -85,9 +88,11 @@ export function starRGB(teff) {
 
 export function hydrate(data) {
   const { methods, facilities, rows } = data;
+  const cols = data.cols || COLS;
   return rows.map((r, i) => {
     const p = { id: i };
-    COLS.forEach((c, j) => { p[c] = r[j]; });
+    for (const c of EXTRA_COLS) p[c] = null;
+    cols.forEach((c, j) => { p[c] = r[j] === undefined ? null : r[j]; });
     p.method = methods[p.method] || 'Not identified';
     p.facility = facilities[p.facility] || null;
     derive(p);
@@ -133,8 +138,12 @@ function derive(p) {
   p.tempClass = classifyTemp(p.teq);
 
   // Bulk properties (only when both size and mass were measured)
+  // NASA's composite table fills a missing mass or radius using a standard mass-radius relation. A planet whose
+  // two values sit exactly on that curve (about 4 in 5 of those with both) has only ONE real measurement, so its
+  // density and gravity would just be the relation talking back. We leave those out.
+  p.mr_derived = p.rade != null && p.masse != null && Math.abs(p.rade / radiusFromMass(p.masse) - 1) < 0.006;
   p.density = null; p.gravity = null;
-  if (p.rade != null && p.masse != null) {
+  if (p.rade != null && p.masse != null && !p.mr_derived) {
     p.density = EARTH_DENSITY * p.masse / Math.pow(p.rade, 3);
     p.gravity = p.masse / (p.rade * p.rade);
   }
@@ -144,6 +153,34 @@ function derive(p) {
   p.hz = !!(p.S != null && p.S >= 0.25 && p.S <= 1.7 && small && p.type !== 'unknown');
 
   p.star = starClass(p.teff);
+  p.esi = esi(p);
+  p.slug = slug(p.name);
+}
+
+// URL-safe name, used for the static page of each planet.
+export const slug = (name) => name.toLowerCase().normalize('NFKD').replace(/[^\w]+/g, '-').replace(/^-+|-+$/g, '');
+
+// A simple Earth-likeness score from size and temperature only (0 to 1). It says nothing about
+// atmosphere, water or life, and uses the planet's equilibrium temperature, not its surface temperature.
+export function esi(p) {
+  if (p.r == null || p.teq == null) return null;
+  return (1 - Math.abs(p.r - 1) / (p.r + 1)) * (1 - Math.abs(p.teq - 270) / (p.teq + 270));
+}
+
+// Kepler candidates are named by a Kepler Object of Interest number, e.g. KOI-1843.03.
+export const isKOI = (p) => /^KOI-/.test(p.name);
+export const KOI_NOTE = 'KOI stands for Kepler Object of Interest: a numbered signal found in data from the Kepler space telescope. The digits after the dot count the signals found around the same star.';
+
+// Page on the NASA Exoplanet Archive for a planet.
+export const archiveUrl = (p) => 'https://exoplanetarchive.ipac.caltech.edu/overview/' + encodeURIComponent(p.name);
+
+// Format a value with its uncertainty, e.g. "1.27 (+0.05, -0.04)". Returns '' when no uncertainty is known.
+export function plusMinus(upper, lower, digits = 2) {
+  if (upper == null || lower == null) return '';
+  const u = Math.abs(upper), l = Math.abs(lower);
+  if (!u && !l) return '';
+  if (Math.abs(u - l) <= 0.05 * Math.max(u, l)) return `± ${fmt(Math.max(u, l), digits)}`;
+  return `+${fmt(u, digits)} / −${fmt(l, digits)}`;
 }
 
 // How a planet should look: a plain description that planet3d.js turns into a picture.

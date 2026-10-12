@@ -2,17 +2,7 @@
 // Run:  node scripts/build-pages.mjs     (the generated files are committed, so hosting needs no build step)
 import fs from 'fs';
 
-const NAV = [
-  ['index.html', 'Catalogue', 'The full list of planets, with search and filters.'],
-  ['how.html', 'How planets are found', 'The six methods astronomers use, with a diagram of each.'],
-  ['telescopes.html', 'Telescopes', 'The space telescopes and observatories behind the discoveries.'],
-  ['timeline.html', 'Timeline', 'How many planets were found each year, and by which method.'],
-  ['types.html', 'Planet types', 'From sub-Earths to super-Jupiters, and how many of each exist.'],
-  ['faq.html', 'Q&A', 'Short answers to common questions.'],
-  ['kids.html', 'Kids', 'How big, how hot, how heavy would you be? Planets for young explorers.'],
-  ['help.html', 'Help find planets', 'Real projects where anyone can help discover and track exoplanets.'],
-];
-const SITE = 'https://exoplanet-atlas.macrocosm.workers.dev/';
+import { SITE, ALL_PAGES } from '../js/site.js';
 const esc = (s) => s.replace(/&/g, '&amp;');
 const HELP_BODY = `<p class="sec-lede">You don’t need a degree or a telescope to help find planets. Professional astronomers have more data than they can look through, and volunteers have already discovered real worlds. Here are two projects that are all about exoplanets.</p>
       <div class="help-grid">
@@ -36,8 +26,9 @@ const HELP_BODY = `<p class="sec-lede">You don’t need a degree or a telescope 
       <p class="small muted">Both projects are run by their own teams; check each project page for how it is running today. This site is not affiliated with them.</p>`;
 
 
+// The header is only the brand and a search button. js/nav.js builds the menu from js/site.js,
+// so changing the menu never means rewriting every page.
 const header = (file) => {
-  const links = NAV.map(([href, label]) => `<a href="${href}"${href === file ? ' aria-current="page"' : ''}>${esc(label)}</a>`).join('');
   const search = file === 'index.html'
     ? '<button type="button" class="searchbtn" id="goSearch" aria-label="Search planets">'
     : '<a class="searchbtn" href="index.html#search" aria-label="Search planets">';
@@ -48,7 +39,7 @@ const header = (file) => {
     <svg width="26" height="26" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="13" fill="#FFB454"/><ellipse cx="32" cy="32" rx="28" ry="8" fill="none" stroke="#EAF0FF" stroke-width="3" transform="rotate(-22 32 32)"/></svg>
     <span>Exoplanet Atlas</span>
   </a>
-  <nav class="nav" aria-label="Sections">${links}</nav>
+  <nav class="nav" id="nav" aria-label="Sections"><a href="index.html">Catalogue</a><a href="planets.html">All planets</a><a href="how.html">How planets are found</a></nav>
   ${search}
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
     <span>Search</span><kbd aria-hidden="true">/</kbd>
@@ -56,6 +47,27 @@ const header = (file) => {
 </header>
 <!--/HEADER-->`;
 };
+
+
+const STUDIED = [
+  ['HD 209458 b', 'Hubble, 2001–2003', 'The first planet seen crossing its star (1999) was also the first to have an atmosphere detected: sodium in 2001, and later a huge cloud of hydrogen streaming away from it.'],
+  ['HD 189733 b', 'Hubble, 2013', 'Its colour was measured from reflected light: a deep blue. The blue is thought to come from glassy particles in its air, not oceans. Water vapour has also been detected.'],
+  ['WASP-39 b', 'JWST, 2022–2023', 'Webb found carbon dioxide in its atmosphere, the first clear detection of that gas on a planet around another star, and later sulphur dioxide, made by sunlight acting on the air.'],
+  ['WASP-96 b', 'JWST, 2022', 'Webb’s first full spectrum of an exoplanet showed the fingerprint of water vapour and signs of clouds.'],
+  ['WASP-76 b', 'VLT (ESPRESSO), 2020', 'Iron vapour was detected on its hot day side and not on its cooler night side, which fits iron condensing out and falling as rain. This one was measured from the ground.'],
+  ['KELT-9 b', 'Ground and Hubble', 'Hotter than most stars’ surfaces, its day side is so hot that molecules break apart. Atoms of iron and titanium have been detected in its air.'],
+  ['K2-18 b', 'JWST, 2023', 'Webb found methane and carbon dioxide in the air of this planet in its star’s habitable zone. A claimed signal of a sulphur molecule is disputed. Nobody has found evidence of life.'],
+  ['TRAPPIST-1 b', 'JWST, 2023', 'Webb measured its heat and found no sign of a thick atmosphere. It looks like bare, hot rock. The next planet out, TRAPPIST-1 c, also shows no thick carbon-dioxide air.'],
+  ['55 Cnc e', 'JWST, 2024', 'A lava world. Webb saw changes in its heat that may mean a thick atmosphere of gases from the rocky interior, but this is still being worked out.'],
+];
+const SEEN_BODY = `<p class="sec-lede">Nearly all exoplanets are found indirectly, from what they do to their star. A few are bright enough and far enough from their star to photograph directly. Others have had their air analysed by starlight filtered through it. This page lists both.</p>
+      <h2 class="h2">Planets that were photographed</h2>
+      <p class="muted" id="imgLede">Loading the list…</p>
+      <div class="more-grid" id="imgList"></div>
+      <p class="small muted">These are real detections of light from the planet, but they show a faint dot, not a surface. Every 3D picture on this site is an artist’s impression. Taken from the catalogue data.</p>
+      <h2 class="h2">Atmospheres astronomers have studied</h2>
+      <p class="sec-lede">When a planet crosses its star, a little starlight passes through the planet’s air. Gases take out particular colours, so a spectrum reveals what is there. These are well-known examples. This list is written by hand, not taken from the catalogue data, so check the telescope teams’ own pages for the latest results.</p>
+      <div class="more-grid" id="studied">${STUDIED.map(([n, who, what]) => `<a class="more-tile" href="index.html#planet=${encodeURIComponent(n)}"><b>${n}</b><small class="muted">${who}</small><span>${what}</span></a>`).join('')}</div>`;
 
 const PAGES = [
   { file: 'how.html', title: 'How planets are found',
@@ -84,13 +96,69 @@ const PAGES = [
     desc: 'Exoplanets for kids: how big a planet is next to Earth, how much you would weigh there, how long a year lasts, and a game to spot a planet crossing its star.',
     body: `<p class="sec-lede">Thousands of planets circle other stars. Pick one and find out what it would be like to visit!</p>
       <div id="kids"></div>` },
+  { file: 'charts.html', title: 'Charts of every planet', script: 'js/charts-page.js',
+    desc: 'Interactive charts of every known exoplanet: mass against radius, orbit time against radius, and more. Hover a dot to see the planet, click to open it.',
+    body: `<p class="sec-lede">Every planet with a measured value, plotted. Hover or tap a dot to see which planet it is, then open it. Both axes can be switched.</p>
+      <div class="cx-controls" id="cxControls"></div>
+      <div class="cx-wrap"><canvas id="cx" role="img" aria-label="Scatter chart of exoplanets"></canvas><div id="cxTip" class="cx-tip" hidden></div></div>
+      <div class="legend" id="cxLegend"></div>
+      <p class="small muted" id="cxNote"></p>` },
+  { file: 'systems.html', title: 'Star systems, to scale', script: 'js/systems-page.js',
+    desc: 'See all the planets of a star side by side, drawn to scale on a log axis, with the habitable zone marked. Search any star or pick a system.',
+    body: `<p class="sec-lede">Pick a star to see its planets laid out by distance, with the zone where starlight is in a range that could allow liquid water.</p>
+      <div class="picker"><label class="search big"><span class="sr">Search for a star</span><input id="sysQ" type="search" autocomplete="off" spellcheck="false" placeholder="Search a star, e.g. TRAPPIST-1" data-ip="Search a star, e.g. TRAPPIST-1"></label><ul class="pick-list" id="sysPick" hidden></ul></div>
+      <div id="sysOut"></div>
+      <h2 class="h2">Systems with the most planets</h2>
+      <div class="more-grid" id="sysTop"></div>` },
+  { file: 'compare.html', title: 'Compare two planets', script: 'js/compare-page.js',
+    desc: 'Compare any two exoplanets side by side: size, mass, year length, temperature, distance and a simple Earth-likeness score.',
+    body: `<p class="sec-lede">Choose any two planets. Try a hot Jupiter and a small rocky world, or two planets of the same star.</p>
+      <div class="cmp-pick"><div class="picker"><label class="search big"><span class="sr">First planet</span><input id="cmpA" type="search" autocomplete="off" spellcheck="false" placeholder="First planet, e.g. TRAPPIST-1 e"></label><ul class="pick-list" id="pickA" hidden></ul></div>
+      <div class="picker"><label class="search big"><span class="sr">Second planet</span><input id="cmpB" type="search" autocomplete="off" spellcheck="false" placeholder="Second planet, e.g. 51 Peg b"></label><ul class="pick-list" id="pickB" hidden></ul></div></div>
+      <div id="cmpOut"></div>` },
+  { file: 'tonight.html', title: 'What can I see tonight?', script: 'js/tonight.js',
+    desc: 'Which stars that have known planets are above your horizon right now, and where to look. Uses your location or a city you choose.',
+    body: `<p class="sec-lede">You cannot see the planets themselves, but some of their stars are bright enough to see without a telescope. Choose where you are and when.</p>
+      <div class="tn-controls" id="tnControls"></div>
+      <div class="tn-grid"><canvas id="tnSky" class="tn-sky" role="img" aria-label="Map of the sky above you"></canvas><div id="tnList"></div></div>
+      <p class="small muted" id="tnNote"></p>` },
+  { file: 'seen.html', title: 'Planets we have seen, and atmospheres we have studied', script: 'js/seen-page.js',
+    desc: 'Exoplanets that have been photographed directly, and well-known planets whose atmospheres were studied with Hubble, Webb and ground telescopes.',
+    body: SEEN_BODY },
+  { file: 'new.html', title: "What's new in the catalogue", script: 'js/new-page.js',
+    extraHead: '<link rel="alternate" type="application/atom+xml" title="Exoplanet Atlas: new planets" href="feed.xml">',
+    desc: 'New planets added to the catalogue each week, the newest discoveries by year, and an Atom feed to follow them.',
+    body: `<p class="sec-lede" id="nwLede"></p>
+      <div id="nwOut"></div>
+      <p class="small muted">Follow along with the <a href="feed.xml">Atom feed</a> in any feed reader. The catalogue refreshes from the NASA Exoplanet Archive every Monday.</p>` },
+  { file: 'data.html', title: 'Data, citation and sharing', script: 'js/data-page.js',
+    desc: 'Download the exoplanet catalogue as CSV or JSON, cite the data, share a planet as a picture, or embed a planet card on your own page.',
+    body: `<p class="sec-lede">The numbers come from the NASA Exoplanet Archive. You are welcome to use this version of them, with credit.</p>
+      <h2 class="h2">Download</h2>
+      <p id="dlRow"><button type="button" class="btn primary" id="dlCsv">Download CSV</button> <button type="button" class="btn" id="dlJson">Download JSON</button> <span class="muted small" id="dlInfo"></span></p>
+      <p class="small muted">Includes the values as shown on this site, with estimates marked in the "estimated" columns. For the original, go to the <a href="https://exoplanetarchive.ipac.caltech.edu/" rel="noopener">NASA Exoplanet Archive</a>.</p>
+      <h2 class="h2">Cite</h2>
+      <pre class="cite" id="citeText"></pre>
+      <p><button type="button" class="btn" id="citeCopy">Copy citation</button> <button type="button" class="btn" id="bibCopy">Copy BibTeX</button> <span class="muted small" id="citeMsg" role="status"></span></p>
+      <h2 class="h2">Share a planet</h2>
+      <p class="sec-lede">Open any planet in the catalogue and use “Save a picture card” to make an image to post, or “Copy link to this planet”.</p>
+      <h2 class="h2">Embed a planet on your site</h2>
+      <div class="picker"><label class="search big"><span class="sr">Planet to embed</span><input id="embQ" type="search" autocomplete="off" spellcheck="false" placeholder="Planet name, e.g. Proxima Cen b" value="Proxima Cen b"></label><ul class="pick-list" id="embPick" hidden></ul></div>
+      <pre class="cite" id="embCode"></pre>
+      <p><button type="button" class="btn" id="embCopy">Copy embed code</button></p>
+      <div id="embPreview"></div>` },
+  { file: 'classroom.html', title: 'Classroom kit: exoplanet activities', script: 'js/classroom.js', bodyClass: 'classroom',
+    desc: 'Printable exoplanet activities for the classroom, built from real data: a scale model, year lengths, weight on other worlds and reading a transit graph.',
+    body: `<p class="sec-lede">Five short activities that use real planets. Print this page (or save it as a PDF), hand it out, and use the answer key at the end. Numbers are computed from the catalogue.</p>
+      <p class="noprint"><button type="button" class="btn primary" id="printBtn">Print this page</button></p>
+      <div id="clsOut"></div>` },
   { file: 'help.html', title: 'Help find planets: citizen science', script: 'js/help.js',
     desc: 'Citizen science for exoplanets: help find new planets in NASA TESS data with Planet Hunters TESS, or time planets crossing their stars with NASA Exoplanet Watch.',
     body: HELP_BODY },
 ];
 
-const more = (file) => `<section class="wrap more" aria-label="Keep exploring"><h2 class="h2">Keep exploring</h2><div class="more-grid">${
-  NAV.filter(([f]) => f !== file).map(([href, label, blurb]) => `<a class="more-tile" href="${href}"><b>${esc(label)}</b><span>${esc(blurb)}</span></a>`).join('')}</div></section>`;
+const more = (file) => `<section class="wrap more" aria-label="Keep exploring"><h2 class="h2" data-i>Keep exploring</h2><div class="more-grid">${
+  ALL_PAGES.filter(([f]) => f !== file).map(([href, label, blurb]) => `<a class="more-tile" href="${href}"><b data-i>${esc(label)}</b><span data-i>${esc(blurb)}</span></a>`).join('')}</div></section>`;
 
 const page = (p) => `<!doctype html>
 <html lang="en">
@@ -110,6 +178,7 @@ const page = (p) => `<!doctype html>
 <meta property="og:type" content="website">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23070B1A'/%3E%3Ccircle cx='32' cy='32' r='14' fill='%23FFB454'/%3E%3Cellipse cx='32' cy='32' rx='26' ry='7' fill='none' stroke='%23EAF0FF' stroke-width='2.5' transform='rotate(-22 32 32)'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="css/style.css">
+${p.extraHead || ''}
 </head>
 <body class="subpage ${p.bodyClass || ''}">
 <a class="skip" href="#main">Skip to content</a>
@@ -120,8 +189,8 @@ ${header(p.file)}
 
 <main id="main">
   <section class="wrap page-head">
-    <h1 class="h2 big-h">${esc(p.title)}</h1>
-    ${p.body}
+    <h1 class="h2 big-h" data-i>${esc(p.title)}</h1>
+    ${p.body.replace(/<p class="sec-lede">([^<&]+)<\/p>/, '<p class="sec-lede" data-i>$1</p>')}
   </section>
   ${more(p.file)}
 </main>
@@ -137,6 +206,23 @@ ${header(p.file)}
 `;
 
 for (const p of PAGES) fs.writeFileSync(p.file, page(p));
+
+// Embeddable single-planet card (not listed in the sitemap, and not for search engines)
+fs.writeFileSync('embed.html', `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Planet card · Exoplanet Atlas</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body class="embed">
+<div id="card" class="e-card">Loading…</div>
+<script type="module" src="js/embed.js"></script>
+</body>
+</html>
+`);
 
 // keep the header in index.html in sync
 let idx = fs.readFileSync('index.html', 'utf8');

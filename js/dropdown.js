@@ -3,7 +3,16 @@
 const all = [];
 let openOne = null;
 
-const split = (t) => { const m = t.match(/^(.*?)\s*\(([^()]+)\)$/); return m ? [m[1], m[2]] : [t, '']; };
+// "Label (hint)": the hint may itself contain brackets, e.g. "Cold (below 230 K (-43 °C))".
+const split = (t) => {
+  if (!t.endsWith(')')) return [t, ''];
+  let depth = 0;
+  for (let i = t.length - 1; i >= 0; i--) {
+    if (t[i] === ')') depth++;
+    else if (t[i] === '(' && --depth === 0) return i > 0 ? [t.slice(0, i).trim(), t.slice(i + 1, -1)] : [t, ''];
+  }
+  return [t, ''];
+};
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 function close(dd, focusBtn) {

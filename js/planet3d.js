@@ -225,8 +225,12 @@ export class PlanetView {
 
   resize() {
     const cw = this.canvas.clientWidth || 1, ch = this.canvas.clientHeight || 1;
-    const budget = this.tier ? 1.3e6 : 3.2e5;                      // most pixels we ask the GPU to shade per frame
-    const dpr = Math.min(window.devicePixelRatio || 1, 1.5, Math.sqrt(budget / (cw * ch))) * this.quality;
+    // Most pixels we ask the GPU to shade per frame. Phones get a bit more than before so the picture is
+    // sharper; the quality control below still backs off on slow devices.
+    const strong = (navigator.hardwareConcurrency || 4) >= 6 && (navigator.deviceMemory || 4) >= 4;
+    const budget = this.tier ? 1.3e6 : (strong ? 6.5e5 : 5.0e5);
+    const cap = this.tier ? 1.5 : 2;
+    const dpr = Math.min(window.devicePixelRatio || 1, cap, Math.sqrt(budget / (cw * ch))) * this.quality;
     const w = Math.max(2, Math.round(cw * dpr));
     const h = Math.max(2, Math.round(ch * dpr));
     if (this.canvas.width !== w || this.canvas.height !== h) { this.canvas.width = w; this.canvas.height = h; }

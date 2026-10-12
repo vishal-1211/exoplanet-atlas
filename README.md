@@ -88,3 +88,10 @@ This research has made use of the NASA Exoplanet Archive, which is operated by t
 
 The moving star map pauses while you scroll and resumes half a second later, and the large panels use a solid background instead of a live blur, so scrolling gets the whole frame budget.
 
+
+
+## Pages and scripts (added October 2026)
+
+- `js/site.js` lists every page; the header menu, "Keep exploring" tiles and sitemap read it. After editing it run `node scripts/build-pages.mjs`, `node scripts/build-home.mjs`, `node scripts/build-planets.mjs`.
+- The weekly refresh also writes `data/changes.json` (what changed) and `feed.xml`, and rewrites the data-driven parts of `index.html`.
+- `fetch-nasa.mjs` asks NASA for uncertainty, brightness and source columns and falls back to the basic columns if they are refused.

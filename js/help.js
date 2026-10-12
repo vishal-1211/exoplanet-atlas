@@ -1,4 +1,5 @@
 // Help page: just the sky background and the header behaviour (the content is static).
+import './nav.js';
 import { hydrate } from './model.js';
 import { Sky } from './sky.js';
 const $ = (s) => document.querySelector(s);

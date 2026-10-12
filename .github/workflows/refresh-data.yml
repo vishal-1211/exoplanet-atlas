@@ -22,13 +22,15 @@ jobs:
         run: node scripts/fetch-nasa.mjs
       - name: Convert to the website's data file
         run: node scripts/build-data.mjs
+      - name: Update the home page and the feed
+        run: node scripts/build-home.mjs
       - name: Check the result
         run: node scripts/test.mjs
       - name: Commit if anything changed
         run: |
           git config user.name "exoplanet-atlas bot"
           git config user.email "actions@users.noreply.github.com"
-          git add data/planets.json data/raw/planets.csv
+          git add data/planets.json data/changes.json data/raw/planets.csv feed.xml index.html
           if git diff --cached --quiet; then
             echo "No changes in NASA's data this week."
           else

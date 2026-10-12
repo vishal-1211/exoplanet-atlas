@@ -4,14 +4,14 @@
 // Usage: node scripts/fetch-nasa.mjs
 import { writeFileSync } from 'node:fs';
 
-const COLUMNS = 'pl_name,hostname,sy_snum,sy_pnum,discoverymethod,disc_year,disc_facility,disc_locale,pl_orbper,pl_orbsmax,pl_orbeccen,pl_rade,pl_bmasse,pl_insol,pl_eqt,st_spectype,st_teff,st_rad,st_mass,sy_dist,ra,dec,pl_controv_flag';
-const url = 'https://exoplanetarchive.ipac.caltech.edu/TAP/sync?' + new URLSearchParams({
-  query: `select ${COLUMNS} from pscomppars`,
-  format: 'csv',
-});
+const BASE = 'pl_name,hostname,sy_snum,sy_pnum,discoverymethod,disc_year,disc_facility,disc_locale,pl_orbper,pl_orbsmax,pl_orbeccen,pl_rade,pl_bmasse,pl_insol,pl_eqt,st_spectype,st_teff,st_rad,st_mass,sy_dist,ra,dec,pl_controv_flag';
+// Extra columns: measurement uncertainties (upper/lower), the star's brightness and the paper the values come from.
+// If NASA rejects any of them (for example a renamed column), we fall back to BASE so the refresh still works.
+const EXTRA = 'pl_radeerr1,pl_radeerr2,pl_bmasseerr1,pl_bmasseerr2,pl_orbpererr1,pl_orbpererr2,pl_eqterr1,pl_eqterr2,sy_vmag,pl_refname';
+const urlFor = (cols) => 'https://exoplanetarchive.ipac.caltech.edu/TAP/sync?' + new URLSearchParams({ query: `select ${cols} from pscomppars`, format: 'csv' });
 const out = new URL('../data/raw/planets.csv', import.meta.url).pathname;
 
-async function attempt(n) {
+async function attempt(url) {
   const res = await fetch(url, { headers: { 'User-Agent': 'exoplanet-atlas-refresh (github actions)' } });
   if (!res.ok) throw new Error(`NASA answered HTTP ${res.status}`);
   const text = await res.text();
@@ -22,16 +22,18 @@ async function attempt(n) {
 }
 
 let lastErr;
-for (let i = 1; i <= 4; i++) {
-  try {
-    const { text, lines } = await attempt(i);
-    writeFileSync(out, text);
-    console.log(`Saved ${lines} planets to data/raw/planets.csv`);
-    process.exit(0);
-  } catch (err) {
-    lastErr = err;
-    console.error(`Attempt ${i} failed: ${err.message}`);
-    await new Promise((r) => setTimeout(r, 15000 * i));
+for (const [label, cols, tries] of [['with uncertainties and sources', BASE + ',' + EXTRA, 2], ['basic columns only', BASE, 4]]) {
+  for (let i = 1; i <= tries; i++) {
+    try {
+      const { text, lines } = await attempt(urlFor(cols));
+      writeFileSync(out, text);
+      console.log(`Saved ${lines} planets to data/raw/planets.csv (${label})`);
+      process.exit(0);
+    } catch (err) {
+      lastErr = err;
+      console.error(`Attempt ${i} (${label}) failed: ${err.message}`);
+      await new Promise((r) => setTimeout(r, 8000 * i));
+    }
   }
 }
 console.error('Giving up. The existing data was not changed.');

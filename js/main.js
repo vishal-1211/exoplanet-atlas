@@ -1,4 +1,8 @@
-import { hydrate, TYPES, TEMPS, typeLabel, tempLabel, look, lookReason, fmt, tempColor, transitDepth } from './model.js';
+import './nav.js';
+import { hydrate, TYPES, TEMPS, typeLabel, tempLabel, look, lookReason, fmt, tempColor, transitDepth, isKOI, KOI_NOTE, archiveUrl } from './model.js';
+import { t, lang, applyLang } from './i18n.js';
+import { SHELVES, shelvesHTML, orbBg, glow, heroTexts } from './shelves.js';
+import { systemSVG } from './system.js';
 import { topFacts, details, HOW_FOUND, editorNote, fmtDuration, CURATED } from './facts.js';
 import { comparisonHTML } from './compare.js';
 import { Sky, prepare, drawMiniSky } from './sky.js';
@@ -40,8 +44,6 @@ async function load() {
 function prepareData() {
   for (const p of ALL) {
     p.skey = p.search.replace(/[^a-z0-9]/g, '');
-    p.esi = (p.r != null && p.teq != null)
-      ? (1 - Math.abs(p.r - 1) / (p.r + 1)) * (1 - Math.abs(p.teq - 270) / (p.teq + 270)) : null;
     const known = [p.r, p.m, p.per, p.teq, p.dist_ly].filter((v) => v != null).length;
     p.score = (CURATED[p.name] || p.host === 'TRAPPIST-1' ? 100 : 0) + (p.hz ? 40 : 0)
       + (p.dist_ly != null && p.dist_ly < 50 ? 30 : 0) + known * 4 + (p.year >= 2024 ? 4 : 0)
@@ -60,12 +62,9 @@ function startSky() {
 
 // ---------------------------------------------------------------- hero
 function buildHero() {
-  const n = ALL.length;
-  const hosts = new Set(ALL.map((p) => p.host)).size;
-  const years = ALL.map((p) => p.year).filter((y) => y != null);
-  $('#lede').textContent = `Astronomers have confirmed planets around ${hosts.toLocaleString('en-US')} stars since ${Math.min(...years)}. Pick any one to watch it turn. Every picture is an artist's impression built from what has been measured.`;
-  const transit = ALL.filter((p) => p.method === 'Transit').length;
-  $('#curveCap').textContent = `A star's brightness over time. It dips when a planet crosses in front of it. ${Math.round((100 * transit) / n)}% of these planets were found this way.`;
+  const { n, lede, cap } = heroTexts(ALL, lang() === 'hi');
+  $('#lede').textContent = lede;
+  $('#curveCap').textContent = cap;
   $('#heroCurve').innerHTML = heroCurve();
   $('#updated').textContent = META.generated || 'recently';
   const el = $('#heroCount');
@@ -104,63 +103,16 @@ document.addEventListener('keydown', (e) => {
 });
 
 // ---------------------------------------------------------------- shelves
-const orbBg = (p) => { const c = look(p).colors; return `radial-gradient(circle at 32% 30%, ${c[2]}, ${c[0]} 55%, ${c[1]})`; };
-const glow = (p) => look(p).colors[0];
-const top = (list, key, asc, n = 14, filter = () => true) =>
-  list.filter((p) => p[key] != null && filter(p)).sort((a, b) => (asc ? a[key] - b[key] : b[key] - a[key])).slice(0, n);
-
-const FAMOUS = ['51 Peg b', 'Proxima Cen b', 'TRAPPIST-1 e', 'Kepler-452 b', 'Kepler-16 b', 'HD 189733 b', '55 Cnc e', 'WASP-12 b',
-  'KELT-9 b', 'HR 8799 e', 'Kepler-186 f', 'K2-18 b', 'WASP-76 b', 'GJ 1214 b', 'HD 209458 b', 'bet Pic b', 'PSR B1257+12 c',
-  'LHS 1140 b', "Teegarden's Star b", 'PSR B1620-26 b'];
-
-const SHELVES = [
-  { id: 'famous', title: 'Famous worlds', blurb: 'Planets with a story: firsts, records and oddities.',
-    pick: (A) => FAMOUS.map((n) => A.find((p) => p.name === n)).filter(Boolean), stat: (p) => `${typeLabel(p.type)}, ${p.year}`, browse: { sort: 'interesting' } },
-  { id: 'closest', title: 'Our nearest neighbours', blurb: 'The planets closest to the Sun.',
-    pick: (A) => top(A, 'dist_ly', true), stat: (p) => `${fmt(p.dist_ly, 1)} light-years`, browse: { sort: 'close' } },
-  { id: 'hz', title: 'Habitable-zone starlight', blurb: 'Rocky-sized planets that get starlight in a range that could allow liquid water. Nobody knows yet whether any do.',
-    pick: (A) => top(A, 'dist_ly', true, 14, (p) => p.hz), stat: (p) => `${fmt(p.dist_ly, 1)} light-years`, browse: { hz: true, sort: 'close' } },
-  { id: 'new', title: 'Fresh discoveries', blurb: 'The newest additions to the catalogue.',
-    pick: (A) => top(A, 'year', false, 14), stat: (p) => `Found in ${p.year}`, browse: { sort: 'new' } },
-  { id: 'hot', title: 'Hottest worlds', blurb: 'Measured temperatures that would melt metal.',
-    pick: (A) => top(A, 'teq', false, 14, (p) => !p.teq_est && !p.controv && p.teq < 4500), stat: (p) => `${fmt(p.teq, 0)} K`, browse: { sort: 'hot' } },
-  { id: 'short', title: 'Shortest years', blurb: 'Planets that race around their star in hours.',
-    pick: (A) => top(A, 'per', true, 14, (p) => !p.per_est && !p.controv), stat: (p) => fmtDuration(p.per), browse: { sort: 'short' } },
-  { id: 'long', title: 'Longest years', blurb: 'Far-out worlds whose single orbit takes centuries or more.',
-    pick: (A) => top(A, 'per', false, 14, (p) => !p.per_est && !p.controv), stat: (p) => fmtDuration(p.per), browse: { sort: 'long' } },
-  { id: 'tiny', title: 'Smallest planets', blurb: 'Some are smaller than Mercury.',
-    pick: (A) => top(A, 'rade', true, 14, (p) => !p.controv), stat: (p) => `${fmt(p.r, 2)}× Earth`, browse: { sort: 'small' } },
-  { id: 'puffy', title: 'Puffiest planets', blurb: 'Very low density: lighter than cork, in some cases.',
-    pick: (A) => top(A, 'density', true, 14, (p) => !p.controv), stat: (p) => `${fmt(p.density, 2)} g/cm³`, browse: { sort: 'puffy' } },
-];
-
-const CHEVRON = (d) => `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${d}"/></svg>`;
-
+// The shelves are already in index.html (written by scripts/build-home.mjs). Rebuild them here so they
+// always match the data, then attach the click handling once.
 function buildShelves() {
   const host = $('#shelves');
-  host.innerHTML = '';
-  for (const s of SHELVES) {
-    const items = s.pick(ALL);
-    if (!items.length) continue;
-    const sec = document.createElement('section');
-    sec.className = 'shelf';
-    sec.innerHTML = `
-      <div class="shelf-head">
-        <div><h2 class="h2">${esc(s.title)}</h2><p>${esc(s.blurb)}</p></div>
-        <div class="shelf-tools">
-          <button type="button" class="link" data-browse="${s.id}">See all</button>
-          <button type="button" class="arrow" data-dir="-1" aria-label="Scroll ${esc(s.title)} left">${CHEVRON('m15 18-6-6 6-6')}</button>
-          <button type="button" class="arrow" data-dir="1" aria-label="Scroll ${esc(s.title)} right">${CHEVRON('m9 18 6-6-6-6')}</button>
-        </div>
-      </div>
-      <div class="rail" tabindex="0" aria-label="${esc(s.title)}">
-        ${items.map((p) => `<button type="button" class="item" data-id="${p.id}"><i class="orb" style="background:${orbBg(p)};--g:${glow(p)}"></i><b>${esc(p.name)}</b><small>${esc(s.stat(p))}</small></button>`).join('')}
-      </div>`;
-    host.appendChild(sec);
-  }
+  host.innerHTML = shelvesHTML(ALL, t);
+  if (host.dataset.bound) return;
+  host.dataset.bound = '1';
   host.addEventListener('click', (e) => {
     const card = e.target.closest('.item');
-    if (card) return openPlanet(ALL[+card.dataset.id]);
+    if (card) { if (e.metaKey || e.ctrlKey || e.shiftKey || e.button) return; e.preventDefault(); return openPlanet(ALL[+card.dataset.id]); }
     const arrow = e.target.closest('.arrow');
     if (arrow) {
       const rail = arrow.closest('.shelf').querySelector('.rail');
@@ -291,7 +243,7 @@ function rowHTML(p, i) {
   const sub2 = [typeLabel(p.type), p.year, p.dist_ly != null ? fmt(p.dist_ly, 1) + ' ly' : null, p.teq != null ? fmt(p.teq, 0) + ' K' : null].filter((v) => v != null).join(', ');
   return `<button type="button" class="row" data-id="${p.id}" style="top:${i * rowH}px;height:${rowH - 4}px">
     <i class="orb" style="background:${orbBg(p)};--g:${glow(p)}"></i>
-    <span class="c-name"><b>${esc(p.name)}</b><small class="d-only">${esc(p.host)}</small><small class="m-only">${esc(sub2)}</small></span>
+    <span class="c-name"><b>${esc(p.name)}${isKOI(p) ? `<em class="koi" title="${esc(KOI_NOTE)}">KOI</em>` : ''}</b><small class="d-only">${esc(p.host)}</small><small class="m-only">${esc(sub2)}</small></span>
     <span class="c-type">${typeLabel(p.type)}</span>
     <span class="num">${p.year ?? NI}</span>
     <span class="num${p.dist_ly == null ? ' ni' : ''}">${dist}</span>
@@ -376,12 +328,13 @@ function splitDuration(p) {
 function fillDetail(p) {
   $('#dName').textContent = p.name;
   const how = p.method !== NI ? ` by the ${p.method.toLowerCase()} method` : '';
-  $('#dSub').textContent = `${typeLabel(p.type)}${p.year != null ? `, found in ${p.year}` : ''}${how}.`;
+  $('#dSub').textContent = `${typeLabel(p.type)}${p.year != null ? `, found in ${p.year}` : ''}${how}.${isKOI(p) ? ' ' + KOI_NOTE : ''}`;
   const tags = [];
   if (p.tempClass !== 'unknown') tags.push(`<span class="tag"><i style="--c:${tempColor(p.teq)}"></i>${tempLabel(p.tempClass)}</span>`);
   if (p.hotJupiter) tags.push('<span class="tag">Hot Jupiter</span>');
   if (p.hz) tags.push('<span class="tag">Habitable-zone starlight</span>');
   if (p.controv) tags.push('<span class="tag">Status debated</span>');
+  if (isKOI(p)) tags.push(`<span class="tag" title="${esc(KOI_NOTE)}">Kepler candidate name</span>`);
   $('#dBadges').innerHTML = tags.join('');
 
   const cell = (label, val, unit, color) => val == null
@@ -403,6 +356,14 @@ function fillDetail(p) {
   $('#dCurveWrap').hidden = !showCurve;
   $('#dCurve').innerHTML = showCurve ? transitCurve(dep, p.name) : '';
   $('#dCmp').innerHTML = comparisonHTML(p);
+  const sysList = ALL.filter((q) => q.host === p.host);
+  const diagram = sysList.length > 1 || p.sma != null ? systemSVG(sysList, { link: (q) => '#planet=' + encodeURIComponent(q.name), highlight: p.name, id: 'd', width: 520 }) : '';
+  $('#dSystemWrap').hidden = !diagram;
+  $('#dSystem').innerHTML = diagram ? `<div class="chartbox">${diagram}</div><p class="small muted">Distances from the star on a log scale. The green band is where starlight is in a range that could allow liquid water. <a href="systems.html#${encodeURIComponent(p.host)}">Open full diagram</a></p>` : '';
+  $('#dSource').innerHTML = `Values from the NASA Exoplanet Archive${p.reftxt ? ` (${esc(p.reftxt)})` : ''}. <a href="${archiveUrl(p)}" rel="noopener" target="_blank">See this planet on the Archive</a>${p.radeu == null && p.masseu == null ? '' : ''}`;
+  $('#cmpLink').href = 'compare.html#' + new URLSearchParams({ a: p.name }).toString();
+  stopHear();
+  $('#hearBtn').parentElement.hidden = !showCurve;
   $('#dDetails').innerHTML = details(p).map(([k, v]) => `<div><dt>${esc(k)}</dt><dd class="${v === NI ? 'ni' : ''}">${esc(v)}</dd></div>`).join('');
   $('#dArtist').textContent = lookReason(p);
 
@@ -449,6 +410,7 @@ async function openPlanet(p, push = true) {
 
 function hideDetail() {
   if (detail.hidden) return;
+  stopHear();
   detail.hidden = true;
   document.body.classList.remove('lock', 'has-detail');
   document.title = 'Exoplanet Atlas';
@@ -491,6 +453,30 @@ document.addEventListener('keydown', (e) => {
 $('#share').addEventListener('click', async () => {
   try { await navigator.clipboard.writeText(location.href); $('#shareMsg').textContent = 'Link copied.'; }
   catch { $('#shareMsg').textContent = 'Copy the address from your browser bar.'; }
+});
+
+// ---- hear the transit
+let soundMod = null;
+function stopHear() { if (soundMod) soundMod.stopTransit(); const b = $('#hearBtn'); b.setAttribute('aria-pressed', 'false'); b.textContent = t('Hear the transit'); $('#hearMsg').textContent = ''; }
+$('#hearBtn').addEventListener('click', async () => {
+  const b = $('#hearBtn');
+  if (b.getAttribute('aria-pressed') === 'true') { stopHear(); return; }
+  const p = ALL.find((x) => x.name === $('#dName').textContent); const dep = p && transitDepth(p);
+  if (!dep) return;
+  soundMod = soundMod || await import('./sound.js');
+  b.setAttribute('aria-pressed', 'true'); b.textContent = t('Stop');
+  $('#hearMsg').textContent = 'Listen for the pitch to fall as the planet crosses the star. The drop is exaggerated so you can hear it.';
+  soundMod.playTransit(dep, () => { b.setAttribute('aria-pressed', 'false'); b.textContent = t('Hear the transit'); });
+});
+// ---- picture card
+$('#cardBtn').addEventListener('click', async () => {
+  const p = ALL.find((x) => x.name === $('#dName').textContent); if (!p) return;
+  $('#shareMsg').textContent = 'Making the card…';
+  try {
+    const { makeCard, shareOrSave } = await import('./sharecard.js');
+    const how = await shareOrSave(makeCard(p), p);
+    $('#shareMsg').textContent = how === 'shared' ? 'Shared.' : 'Picture saved.';
+  } catch (err) { console.error(err); $('#shareMsg').textContent = 'Could not make the picture on this device.'; }
 });
 
 load();
