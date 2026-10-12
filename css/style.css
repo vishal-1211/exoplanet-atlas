@@ -448,3 +448,35 @@ body.static .veil { background: radial-gradient(ellipse at 20% 0%, rgba(79, 110,
 .k-q button.right { border-color: #4ade80; background: rgba(74, 222, 128, .15); } .k-q button.wrong { border-color: #f87171; }
 .k-note { color: #c7d2fe; margin: 8px 0 0; }
 @media (max-width: 560px) { .k-curve { grid-template-columns: 1fr; } }
+
+/* ---------- kids page: cartoon friends ---------- */
+.k-hero { position: relative; display: flex; align-items: center; gap: 18px; margin: 6px 0 22px; min-height: 170px; }
+.k-pip-wrap { flex: none; width: 160px; height: 160px; animation: k-bob 3.2s ease-in-out infinite; }
+.pip { width: 100%; height: 100%; overflow: visible; }
+.pip-eyes { animation: k-blink 4.5s infinite; transform-origin: 80px 76px; }
+.k-bubble { position: relative; max-width: 420px; padding: 16px 20px; border-radius: 22px; background: #fff; color: #1f2340; font-size: 1.15rem; font-weight: 600; line-height: 1.4; box-shadow: 0 12px 30px rgba(0, 0, 0, .35); }
+.k-bubble::before { content: ''; position: absolute; left: -12px; top: 50%; margin-top: -10px; border: 10px solid transparent; border-right-color: #fff; border-left: 0; }
+.k-bubble.pop { animation: k-pop .35s cubic-bezier(.3, 1.6, .5, 1); }
+.k-star { position: absolute; width: 38px; height: 38px; animation: k-twinkle 2.6s ease-in-out infinite; }
+.k-star.s1 { right: 8%; top: 4px; } .k-star.s2 { right: 22%; bottom: 10px; width: 26px; animation-delay: .8s; } .k-star.s3 { right: 2%; bottom: 30px; width: 30px; animation-delay: 1.6s; }
+.k-card { position: relative; }
+.k-buddy { position: absolute; pointer-events: none; }
+.k-buddy.astro { width: 62px; right: 12px; top: -26px; animation: k-float 4s ease-in-out infinite; }
+.k-buddy.rocket { width: 40px; right: 18px; top: -30px; animation: k-launch 2.4s ease-in-out infinite; }
+.k-buddy.rocket .flame { animation: k-flame .25s ease-in-out infinite alternate; transform-origin: 40px 92px; }
+.k-quiz .h2 { display: flex; align-items: center; gap: 10px; }
+.k-buddy.alien { position: static; width: 46px; animation: k-wave 2.2s ease-in-out infinite; transform-origin: 50% 100%; }
+.alien-eye { animation: k-look 5s ease-in-out infinite; }
+.k-confetti { position: fixed; z-index: 99; width: 9px; height: 13px; border-radius: 2px; pointer-events: none; animation: k-conf 1.2s cubic-bezier(.2, .7, .4, 1) forwards; }
+@keyframes k-bob { 50% { transform: translateY(-10px) rotate(-3deg); } }
+@keyframes k-blink { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(.1); } }
+@keyframes k-pop { from { transform: scale(.85); } to { transform: none; } }
+@keyframes k-twinkle { 50% { transform: scale(.75) rotate(15deg); opacity: .7; } }
+@keyframes k-float { 50% { transform: translateY(-8px) rotate(8deg); } }
+@keyframes k-launch { 50% { transform: translateY(-7px); } }
+@keyframes k-flame { to { transform: scaleY(1.35); } }
+@keyframes k-wave { 25% { transform: rotate(-8deg); } 75% { transform: rotate(8deg); } }
+@keyframes k-look { 0%, 40%, 100% { transform: translateX(0); } 50%, 80% { transform: translateX(2px); } }
+@keyframes k-conf { to { transform: translate(var(--dx), calc(var(--dy) + 260px)) rotate(var(--r)); opacity: 0; } }
+@media (max-width: 560px) { .k-hero { flex-direction: column; align-items: flex-start; } .k-pip-wrap { width: 120px; height: 120px; } .k-bubble::before { display: none; } }
+@media (prefers-reduced-motion: reduce) { .k-pip-wrap, .pip-eyes, .k-star, .k-buddy, .k-buddy .flame, .alien-eye { animation: none !important; } }
