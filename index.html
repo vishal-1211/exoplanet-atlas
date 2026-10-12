@@ -3,13 +3,19 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Exoplanet Atlas</title>
+<title>Exoplanet Atlas: every known exoplanet, in 3D</title>
 <meta name="description" content="Every confirmed planet around another star. Search, sort, and open a spinning artist's impression of each one, with its discovery story and facts.">
 <meta name="theme-color" content="#070B1A">
 <meta name="color-scheme" content="dark">
 <meta property="og:title" content="Exoplanet Atlas">
 <meta property="og:description" content="Every confirmed planet around another star, in one place. Open any one to watch it turn.">
 <meta property="og:type" content="website">
+<link rel="canonical" href="https://exoplanet-atlas.macrocosm.workers.dev/">
+<meta property="og:url" content="https://exoplanet-atlas.macrocosm.workers.dev/">
+<meta property="og:image" content="https://exoplanet-atlas.macrocosm.workers.dev/img/share.png">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Dataset", "name": "Exoplanet Atlas: every confirmed exoplanet", "description": "All confirmed planets around other stars, with size, mass, orbit, temperature, distance and discovery details, from the NASA Exoplanet Archive.", "url": "https://exoplanet-atlas.macrocosm.workers.dev/", "isBasedOn": "https://exoplanetarchive.ipac.caltech.edu/", "creator": {"@type": "Person", "name": "Vishal Arora"}, "keywords": ["exoplanets", "planets around other stars", "NASA Exoplanet Archive", "TESS", "Kepler", "JWST"], "dateModified": "2026-10-12", "variableMeasured": ["planet radius", "planet mass", "orbital period", "equilibrium temperature", "distance", "discovery year", "discovery method"]}</script>
+
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23070B1A'/%3E%3Ccircle cx='32' cy='32' r='14' fill='%23FFB454'/%3E%3Cellipse cx='32' cy='32' rx='26' ry='7' fill='none' stroke='%23EAF0FF' stroke-width='2.5' transform='rotate(-22 32 32)'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="css/style.css">
 </head>
@@ -24,7 +30,7 @@
     <svg width="26" height="26" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="13" fill="#FFB454"/><ellipse cx="32" cy="32" rx="28" ry="8" fill="none" stroke="#EAF0FF" stroke-width="3" transform="rotate(-22 32 32)"/></svg>
     <span>Exoplanet Atlas</span>
   </a>
-  <nav class="nav" aria-label="Sections"><a href="index.html" aria-current="page">Catalogue</a><a href="how.html">How planets are found</a><a href="telescopes.html">Telescopes</a><a href="timeline.html">Timeline</a><a href="types.html">Planet types</a><a href="faq.html">Q&amp;A</a></nav>
+  <nav class="nav" aria-label="Sections"><a href="index.html" aria-current="page">Catalogue</a><a href="how.html">How planets are found</a><a href="telescopes.html">Telescopes</a><a href="timeline.html">Timeline</a><a href="types.html">Planet types</a><a href="faq.html">Q&amp;A</a><a href="kids.html">Kids</a><a href="help.html">Help find planets</a></nav>
   <button type="button" class="searchbtn" id="goSearch" aria-label="Search planets">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
     <span>Search</span><kbd aria-hidden="true">/</kbd>
@@ -95,6 +101,10 @@
       <a class="more-tile" href="faq.html"><b>Q&amp;A</b><span>Short answers to common questions.</span></a>
     </div>
   </section>
+<section class="wrap popular" aria-label="Famous planets">
+  <h2 class="h2">Famous planets</h2>
+  <p class="pl-links"><a href="planet/proxima-cen-b.html">Proxima Cen b</a> · <a href="planet/trappist-1-e.html">TRAPPIST-1 e</a> · <a href="planet/51-peg-b.html">51 Peg b</a> · <a href="planet/kepler-22-b.html">Kepler-22 b</a> · <a href="planet/k2-18-b.html">K2-18 b</a> · <a href="planet/hd-209458-b.html">HD 209458 b</a> · <a href="planet/55-cnc-e.html">55 Cnc e</a> · <a href="planet/toi-700-d.html">TOI-700 d</a> · <a href="planet/kepler-452-b.html">Kepler-452 b</a> · <a href="planet/wasp-12-b.html">WASP-12 b</a> · <a href="planet/hd-189733-b.html">HD 189733 b</a> · <a href="planet/kepler-16-b.html">Kepler-16 b</a> · <a href="planets.html"><b>All planets A–Z →</b></a></p>
+</section>
 </main>
 
 <footer class="foot wrap">

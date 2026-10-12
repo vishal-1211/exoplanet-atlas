@@ -75,6 +75,11 @@ export class Sky {
     this.shift = 0; this.running = false; this.last = 0;
     this.reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     window.addEventListener('resize', () => this.resize());
+    // Hold the drift while anything scrolls, so scrolling gets the whole frame budget.
+    this.quietUntil = 0;
+    document.addEventListener('scroll', () => { this.quietUntil = performance.now() + 450; }, { capture: true, passive: true });
+    window.addEventListener('wheel', () => { this.quietUntil = performance.now() + 450; }, { passive: true });
+    window.addEventListener('touchmove', () => { this.quietUntil = performance.now() + 450; }, { passive: true });
     document.addEventListener('visibilitychange', () => { if (document.hidden) this.pause(); else if (this.want) this.start(); });
     this.resize();
   }
@@ -91,7 +96,8 @@ export class Sky {
   frame = (now) => {
     if (!this.running) return;
     const dt = Math.min(0.1, (now - this.last) / 1000);
-    if (now - this.last >= 40) {          // about 25 frames a second is plenty for a slow drift
+    if (now < this.quietUntil) { this.last = now; this.raf = requestAnimationFrame(this.frame); return; }
+    if (now - this.last >= 50) {          // about 20 frames a second is plenty for a slow drift
       this.shift = (this.shift + dt * 0.5) % 360; this.last = now; this.draw();
     }
     this.raf = requestAnimationFrame(this.frame);
